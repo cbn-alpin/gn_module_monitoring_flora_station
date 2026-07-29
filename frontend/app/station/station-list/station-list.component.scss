@@ -1,0 +1,143 @@
+.list-shs {
+  max-height: 91vh;
+  overflow-y: auto;
+  padding-bottom: 5px;
+}
+
+.searchSite {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+  line-height: 24px;
+}
+
+.box-shadow {
+  box-shadow: 4px 5px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+fieldset {
+  padding: 0.35em 0.625em 0.75em !important;
+  border: 1px solid silver !important;
+  margin: 0 2px !important;
+  border-radius: 3px;
+  // background-color: #f3f3f3;
+}
+
+legend {
+  width: auto;
+  font-size: inherit;
+}
+
+.wrapper {
+  margin-bottom: 18px;
+}
+
+:host ::ng-deep .single-selection .datatable-body-row.active .datatable-row-group {
+  background-color: rgb(154, 217, 247) !important;
+}
+
+#cover-spin {
+  position: fixed;
+  width: 100%;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.39);
+  z-index: 9999;
+}
+
+@-webkit-keyframes spin {
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#cover-spin::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 48%;
+  top: 40%;
+  width: 40px;
+  height: 40px;
+  border-style: solid;
+  border-color: black;
+  border-top-color: transparent;
+  border-width: 4px;
+  border-radius: 50%;
+  -webkit-animation: spin 0.8s linear infinite;
+  animation: spin 0.8s linear infinite;
+}
+.filters-legend {
+  margin-bottom: 0;
+}
+.card-title {
+  margin-bottom: 0;
+}
+.btn-outline-secondary {
+  color: black;
+  border: 1px solid #ced4da;
+}
+
+:host ::ng-deep .mat-header-row {
+    background-color: #4a7c59 !important;
+}
+:host ::ng-deep .mat-header-cell {
+    color: white !important;
+    font-weight: bold !important;
+}
+
+tr.example-detail-row { height: 0; }
+.element-detail { overflow: hidden; }
+tr.example-element-row:not(.example-expanded-row):hover {
+  background: whitesmoke;
+}
+
+tr.example-element-row:not(.example-expanded-row):active {
+  background: #efefef;
+}
+.sub-table-header th {
+    background-color: #e8f5e9;
+    font-weight: bold;
+}
+.sub-table-body tr:hover {
+    background-color: #f9fbe7;
+}
+:host ::ng-deep .mat-sort-header-arrow {
+  color: white;
+}
+.selected-transect {
+    background-color: #c0dc89 !important;
+    font-weight: bold;
+}
+:host ::ng-deep .leaflet-interactive {
+    cursor: pointer !important;
+}
+:host ::ng-deep .info.legend {
+    background: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    line-height: 1.8;
+    
+    p {
+        margin: 0 0 8px 0;
+        font-weight: bold;
+    }
+}
+.selected-station-row {
+    background-color: #F8F8FF !important;
+}

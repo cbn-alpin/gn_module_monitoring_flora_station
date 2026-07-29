@@ -1,0 +1,203 @@
+<div class="row row-0">
+  <div class="card col-xs-12 col-sm-12 col-md-6 col-lg-6 padding-sm tab-container list-shs">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h4 class="card-title">Liste des stations</h4>
+      <button class="btn btn-sm btn-success pull-right box-shadow" (click)="onNewTransect()" *ngIf="addIsAllowed">
+        <i class="fa fa-plus-circle" aria-hidden="true"> </i>
+        Ajouter un nouveau transect
+      </button>
+    </div>
+    <div class="card-body">
+      <fieldset>
+        <legend class="filters-legend">
+          <h6><i class="fa fa-filter"></i> Filtres</h6>
+        </legend>
+        <form class="wrapper wrapper-filter">
+          <div class="row">
+            <div class="searchSite col">
+              <div class="form-row">
+                <div class="searchSite col">
+                  <small> Année de visite : </small>
+                  <select class="form-control form-control-sm" name="selectYear" [formControl]="filterForm.controls.year">
+                    <option [ngValue]="null"> -- Sélectionnez un filtre -- </option>
+                    <option *ngFor="let year of tabYear" [ngValue]="year" [innerHTML]="year"></option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="searchSite col">
+              <div class="form-row">
+                <div class="searchSite col">
+                  <small> Organisme: </small>
+                  <select class="form-control form-control-sm" name="selectOrg" [formControl]="filterForm.controls.organism">
+                    <option [ngValue]="null"> -- Sélectionnez un filtre -- </option>
+                    <option *ngFor="let org of tabOrganism" [ngValue]="org" [innerHTML]="org"></option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="searchSite col">
+              <small> Commune : </small>
+              <select class="form-control form-control-sm" name="selectArea" [formControl]="filterForm.controls.area_name">
+                <option [ngValue]="null"> -- Sélectionnez un filtre -- </option>
+                <option *ngFor="let area of tabArea" [ngValue]="area" [innerHTML]="area"></option>
+              </select>
+            </div>
+          </div>
+          <button mat-stroked-button color="primary" (click)="resetFilters()" class="pull-right">
+            <mat-icon>restart_alt</mat-icon>
+            Réinitialiser
+          </button>
+        </form>
+      </fieldset>
+      <br />
+      <div class="wrapper wrapper-datatable mt-3" style="box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden;">
+        <mat-progress-bar mode="indeterminate" *ngIf="!dataLoaded"></mat-progress-bar>
+        <table mat-table [dataSource]="dataSource" multiTemplateDataRows matSort
+          matSortActive="Station" matSortDirection="asc" class="mat-elevation-28">
+          <ng-container matColumnDef="{{column}}" *ngFor="let column of columnsToDisplay">
+            <th mat-header-cell mat-sort-header *matHeaderCellDef class="mat-header-cell" [matTooltip]="columnTooltips[column]"> {{column}} </th>
+            <td mat-cell *matCellDef="let element"> {{element[column]}} </td>
+          </ng-container>
+          <ng-container matColumnDef="expand">
+            <th mat-header-cell *matHeaderCellDef class="mat-header-cell" aria-label="row actions">&nbsp;</th>
+            <td mat-cell *matCellDef="let element">
+              <div class="d-flex align-items-center">
+                <button mat-icon-button [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()" matTooltip="Actions">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #menu="matMenu">
+                  <button mat-menu-item (click)="onEditStation(element, editStationContent)">
+                    <mat-icon>edit</mat-icon>
+                    <span>Modifier</span>
+                  </button>
+                  <button mat-menu-item *ngIf="element['Nbre transect']=== 0" (click)="onDeleteStation(element, confirmStationContent)">
+                    <mat-icon>delete</mat-icon>
+                    <span>Supprimer</span>
+                  </button>
+                </mat-menu>
+                <button mat-icon-button aria-label="expand row" matTooltip="Voir les transects"
+                  (click)="(expandedElement = expandedElement === element ? null : element); $event.stopPropagation(); onViewStation(element.id_station)">
+                  <mat-icon *ngIf="expandedElement !== element">keyboard_arrow_down</mat-icon>
+                  <mat-icon *ngIf="expandedElement === element">keyboard_arrow_up</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="expandedDetail">
+            <td mat-cell *matCellDef="let element" [attr.colspan]="columnsToDisplayWithExpand.length">
+              <div class="element_detail" [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'">
+                <table class="table">
+                  <thead class="sub-table-header">
+                    <tr>
+                      <th scope="col" [matTooltip]="transectColumnTooltips['Nom transect']">Nom transect</th>
+                      <th scope="col" [matTooltip]="transectColumnTooltips['Nbre visite']">Nbre visite</th>
+                      <th scope="col" [matTooltip]="transectColumnTooltips['Dernière visite']">Dernière visite</th>
+                      <th scope="col">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="sub-table-body">
+                    <tr *ngFor="let transect of expandedStations[element.id_station]"
+                      [class.selected-transect]="transect.id_transect === selectedTransectId"
+                      (click)="onSelectTransect(transect.id_transect); $event.stopPropagation()" style="cursor: pointer;">
+                      <th scope="row">{{transect.transect_label}}</th>
+                      <td>{{transect.nb_visits}}</td>
+                      <td>{{transect.last_visit}}</td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-info" (click)="onInfo(transect.id_base_site)" matTooltip="Info transect">
+                          <i class="fa fa-info-circle"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="columnsToDisplayWithExpand" class="mat-header-row"></tr>
+          <tr mat-row *matRowDef="let element; columns: columnsToDisplayWithExpand;"
+            class="example-element-row"
+            [class.example-expanded-row]="expandedElement === element"
+            [class.selected-station-row]="expandedElement === element"
+            (click)="expandedElement = expandedElement === element ? null : element; onRowSelect(element)">
+          </tr>
+          <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"
+            [class.selected-station-row]="row === expandedElement">
+          </tr>
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" colspan="6">Aucune station à afficher</td>
+          </tr>
+        </table>
+        <mat-paginator [pageSize]="page.size" [pageSizeOptions]="[5, 10, 20, 50]" (page)="onPageChange($event)" showFirstLastButtons></mat-paginator>
+      </div>
+    </div>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 padding-sm">
+    <pnx-map height="91vh" [center]="center" [zoom]="zoom">
+      <pnx-geojson [onEachFeature]="onEachFeature.bind(this)" [geojson]="sites"> </pnx-geojson>
+    </pnx-map>
+  </div>
+</div>
+
+<ng-template #editStationContent let-d="dismiss">
+    <div class="modal-header">
+        <h5 class="modal-title">Modifier la station</h5>
+        <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <form [formGroup]="formEditStation">
+            <div class="form-group">
+                <small>Nom de la station * :</small>
+                <input class="form-control form-control-sm"
+                       [formControl]="formEditStation.controls.name" />
+            </div>
+            <div class="form-group">
+                <small>Remarques :</small>
+                <textarea class="form-control form-control-sm"
+                          [formControl]="formEditStation.controls.remarks"
+                          rows="3">
+                </textarea>
+            </div>
+            <div class="form-group">
+                <!-- TODO: à valider avec le manager — select classique provisoire,
+                     cd_nom référence taxonomie.taxref (dizaines de milliers de taxons),
+                     un vrai composant de recherche/autocomplete sera probablement nécessaire -->
+                <small>Taxon * :</small>
+                <select class="form-control form-control-sm"
+                        [formControl]="formEditStation.controls.cd_nom">
+                    <option [ngValue]="null">-- Sélectionnez un taxon --</option>
+                    <option *ngFor="let taxon of taxons"
+                            [ngValue]="taxon.cd_nom">
+                        {{ taxon.nom_complet }}
+                    </option>
+                </select>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-default btn-sm"
+                (click)="d('Close click')">Fermer</button>
+        <button type="button" class="btn btn-success btn-sm"
+                [disabled]="formEditStation.invalid"
+                (click)="onSaveEditStation()">
+            Enregistrer
+        </button>
+    </div>
+</ng-template>
+
+<ng-template #confirmStationContent let-d="dismiss">
+  <div class="modal-header">
+    <h5 class="modal-title">Confirmer la suppression</h5>
+  </div>
+  <div class="modal-body">
+    Êtes-vous sûr de vouloir supprimer cette station?
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-default btn-sm" (click)="d('Close click')">Annuler</button>
+    <button class="btn btn-danger btn-sm" (click)="onConfirmDeleteStation()">Supprimer</button>
+  </div>
+</ng-template>
