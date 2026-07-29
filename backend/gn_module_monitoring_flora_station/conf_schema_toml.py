@@ -1,0 +1,47 @@
+"""
+   Spécification du schéma toml des paramètres de configurations
+"""
+
+from marshmallow import Schema, fields
+
+from gn_module_monitoring_flora_station import METADATA_NAME, METADATA_CODE
+
+export_available_format = ["geojson", "csv", "shapefile"]
+site_message = {"emptyMessage": "Aucune station à afficher ", "totalMessage": "station(s) au total"}
+list_visit_message = {
+    "emptyMessage": "Aucune visite sur cette station ",
+    "totalMessage": "visites au total",
+}
+detail_list_visit_message = {
+    "emptyMessage": "Aucune autre visite sur cette station ",
+    "totalMessage": "visites au total",
+}
+default_site_columns = [
+    {"name": "Identifiant", "prop": "id_base_site", "width": "90"},
+    {"name": "Taxon", "prop": "nom_taxon", "width": "350"},
+    {"name": "Nombre de visites", "prop": "nb_visit", "width": "120"},
+    {"name": "Date de la dernière visite", "prop": "date_max", "width": "160"},
+]
+default_list_visit_columns = [
+    {"name": "Date", "prop": "visit_date_min", "width": "120"},
+    {"name": "Observateur(s)", "prop": "observers", "width": "350"},
+]
+
+
+class GnModuleSchemaConf(Schema):
+    site_message = fields.Dict(load_default=site_message)
+    list_visit_message = fields.Dict(load_default=list_visit_message)
+    detail_list_visit_message = fields.Dict(load_default=detail_list_visit_message)
+    export_available_format = fields.List(fields.String(), load_default=export_available_format)
+    default_site_columns = fields.List(fields.Dict(), load_default=default_site_columns)
+    default_list_visit_columns = fields.List(fields.Dict(), load_default=default_list_visit_columns)
+    export_srid = fields.Integer(load_default=2154)
+    zoom_center = fields.List(fields.Float(), load_default=[44.863664, 6.268670])
+    zoom = fields.Integer(load_default=10)
+    pagination_serverside = fields.Boolean(load_default=False)
+    items_per_page = fields.Integer(load_default=10)
+    taxon_list_name = fields.String(load_default=METADATA_NAME)
+    site_type_code = fields.String(load_default="FLO")
+    user_list_code = fields.String(load_default=METADATA_CODE)
+    municipality_type_code = fields.String(load_default="COM")
+    max_plot_depth = fields.Integer(load_default=2)

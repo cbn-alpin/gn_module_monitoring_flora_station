@@ -1,0 +1,6 @@
+MODULE_NAME = "Monitoring Flore Station"
+MODULE_CODE = "SFS"
+MODULE_DB_BRANCH = "monitoring_flora_station"
+MODULE_PICTO = "fa-leaf"
+METADATA_NAME = "Suivi Flore Station"
+METADATA_CODE = "SFS"
