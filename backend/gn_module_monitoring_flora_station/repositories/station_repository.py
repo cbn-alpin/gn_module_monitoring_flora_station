@@ -1,0 +1,126 @@
+
+from sqlalchemy import select, func, distinct, and_, or_, desc
+
+from geonature.utils.env import DB
+from geonature.core.gn_monitoring.models import corVisitObserver, TBaseVisits
+from ref_geo.models import LAreas
+from pypnusershub.db.models import User, Organisme
+from apptax.taxonomie.models import Taxref
+
+from ..models import SfsStation, SfsTransect
+
+
+class StationRepository:
+    """
+    Accès BDD pur pour les stations.
+    """
+
+    def get_by_id(self, id_station):
+        return DB.session.get(SfsStation, id_station)
+
+    def get_all(self):
+        return DB.session.query(SfsStation).all()
+
+    def get_by_taxon(self, cd_nom):
+        return DB.session.query(SfsStation).filter_by(cd_nom=cd_nom).all()
+
+    def save(self, station):
+        DB.session.add(station)
+        DB.session.commit()
+        return station
+
+    def merge(self, station):
+        merged = DB.session.merge(station)
+        DB.session.commit()
+        return merged
+
+    def delete(self, station):
+        DB.session.delete(station)
+        DB.session.commit()
+
+    def get_station_detail(self, id_station, municipality_type_code):
+        return DB.session.execute(
+            select(
+                SfsStation,
+                Taxref.lb_nom,
+                func.string_agg(distinct(LAreas.area_name), ", "),
+            )
+            .filter_by(id_station=id_station)
+            .outerjoin(Taxref, SfsStation.cd_nom == Taxref.cd_nom)
+            .outerjoin(
+                LAreas,
+                and_(
+                    func.ST_Intersects(func.ST_Transform(SfsStation.geom, 2154), LAreas.geom),
+                    LAreas.id_type == func.ref_geo.get_id_area_type(municipality_type_code),
+                ),
+            )
+            .group_by(SfsStation.id_station, Taxref.lb_nom)
+        ).first()
+
+    def get_stations_list_query(self, municipality_type_code):
+        return (
+            select(
+                SfsStation,
+                Taxref.lb_nom,
+                func.count(distinct(TBaseVisits.id_base_visit)).label("nb_visits"),
+                func.max(TBaseVisits.visit_date_min).label("last_visit"),
+                func.count(distinct(SfsTransect.id_transect)).label("nb_transect"),
+                func.string_agg(distinct(LAreas.area_name), ", "),
+            )
+            .outerjoin(Taxref, SfsStation.cd_nom == Taxref.cd_nom)
+            .outerjoin(SfsTransect, SfsTransect.id_station == SfsStation.id_station)
+            .outerjoin(TBaseVisits, TBaseVisits.id_base_site == SfsTransect.id_base_site)
+            .outerjoin(
+                LAreas,
+                and_(
+                    func.ST_Intersects(func.ST_Transform(SfsStation.geom, 2154), LAreas.geom),
+                    LAreas.id_type == func.ref_geo.get_id_area_type(municipality_type_code),
+                ),
+            )
+            .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
+            .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
+            .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
+            .group_by(SfsStation.id_station, Taxref.lb_nom)
+            .order_by(SfsStation.name)
+        )
+
+    def get_visit_years(self):
+        q = (
+            select(func.extract("year", TBaseVisits.visit_date_min).label("year"))
+            .outerjoin(SfsTransect, SfsTransect.id_base_site == TBaseVisits.id_base_site)
+            .outerjoin(SfsStation, SfsStation.id_station == SfsTransect.id_station)
+            .where(TBaseVisits.visit_date_min != None)
+            .distinct()
+            .order_by(desc(func.extract("year", TBaseVisits.visit_date_min)))
+        )
+        return DB.session.execute(q).all()
+
+    def get_areas(self, municipality_type_code):
+        q = (
+            select(LAreas.area_name)
+            .select_from(SfsStation)
+            .outerjoin(
+                LAreas,
+                and_(
+                    func.ST_Intersects(func.ST_Transform(SfsStation.geom, 2154), LAreas.geom),
+                    LAreas.id_type == func.ref_geo.get_id_area_type(municipality_type_code),
+                ),
+            )
+            .where(LAreas.area_name != None)
+            .distinct()
+            .order_by(LAreas.area_name)
+        )
+        return DB.session.execute(q).all()
+
+    def get_organisms(self):
+        q = (
+            select(Organisme.nom_organisme)
+            .select_from(SfsStation)
+            .outerjoin(SfsTransect, SfsTransect.id_station == SfsStation.id_station)
+            .outerjoin(TBaseVisits, TBaseVisits.id_base_site == SfsTransect.id_base_site)
+            .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
+            .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
+            .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
+            .distinct()
+        )
+        return DB.session.execute(q).all()
