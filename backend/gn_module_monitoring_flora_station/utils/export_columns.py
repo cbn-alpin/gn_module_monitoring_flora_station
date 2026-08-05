@@ -1,20 +1,26 @@
 def get_base_column_name():
     """
-    Mapping colonne technique / libellé colonne pour l'export de base.
+    Colonnes de base pour l'export (dans l'ordre d'affichage).
     """
     return [
         "identifiant_site",
-        "label_transect",
-        "date_visite",
         "identifiant_visite",
+        "date_visite",
         "identifiant_releve",
         "code_placette",
-        "position_placette",
-        "surface_en_m2",
+        "en_defens",
+        "remarques",
+        "taxon_present",
+        "tiges_fleuries",
+        "tiges_non_fleuries",
+        "facteurs_influence_visite",
+        "facteurs_influence_placette",
         "observateurs",
         "taxon",
-        "points_depart_et_arrivee",
-        "perturbations",
+        "nom_transect",
+        "surface_placette",
+        "position_placette",
+        "organisme",
     ]
 
 
@@ -22,32 +28,38 @@ def get_pro_column_name():
     """
     Colonnes réservées à l'export "pro" (avec identifiants techniques).
     """
-    return ["cdnom", "covcdnom", "covcodestrate", "covcodesubstrat"]
+    return ["cdnom", "covcodestrate", "covcodesubstrate"]
 
 
 def get_mapping_columns():
     """
-    Mapping colonne technique / libellé colonne, utilisé par l'export.
+    Mapping colonne technique (colonne SQL de la vue) / libellé colonne de sortie.
     """
     return {
         "idbsite": "identifiant_site",
-        "transectlb": "label_transect",
-        "visitdate": "date_visite",
         "idbvisit": "identifiant_visite",
+        "visitdate": "date_visite",
         "idreleve": "identifiant_releve",
         "codeplot": "code_placette",
-        "plotpos": "position_placette",
-        "plotsize": "surface_en_m2",
+        "isexclosure": "en_defens",
+        "remarks": "remarques",
+        "taxonpresent": "taxon_present",
+        "floweringstems": "tiges_fleuries",
+        "nonfloweringstems": "tiges_non_fleuries",
+        "lbdisturbance": "facteurs_influence_visite",
+        "lbplotdisturbance": "facteurs_influence_placette",
         "observers": "observateurs",
         "lbtaxon": "taxon",
-        "geom_start": "geom_start",
-        "geom_end": "geom_end",
-        "lbperturb": "perturbations",
+        "transectlb": "nom_transect",
+        "plotsize": "surface_placette",
+        "plotpos": "position_placette",
+        "nom_organisme": "organisme",
         "cd_nom": "cdnom",
-        "geom": "points_depart_et_arrivee",
-        "geom_wkt": "geom_wkt",
         "covstrate": "covstrate",
         "covcodestrate": "covcodestrate",
-        "covsubstrat": "covsubstrat",
-        "covcodesubstrat": "covcodesubstrat",
+        "covsubstrate": "covsubstrate",
+        "covcodesubstrate": "covcodesubstrate",
+        "geom": "points_depart_et_arrivee",
+        "geom_start": "geom_start",
+        "geom_end": "geom_end",
     }
