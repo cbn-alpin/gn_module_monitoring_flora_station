@@ -1,6 +1,6 @@
 from geonature.utils.env import DB
 
-from ..models import SfsPlot, SfsTransect
+from ..models import MfsPlot, MfsTransect
 
 
 class PlotRepository:
@@ -9,16 +9,16 @@ class PlotRepository:
     """
 
     def get_by_id(self, id_plot):
-        return DB.session.get(SfsPlot, id_plot)
+        return DB.session.get(MfsPlot, id_plot)
 
     def get_by_transect(self, id_transect):
-        return DB.session.query(SfsPlot).filter_by(id_transect=id_transect).all()
+        return DB.session.query(MfsPlot).filter_by(id_transect=id_transect).all()
 
     def get_children(self, id_plot):
-        return DB.session.query(SfsPlot).filter_by(id_parent=id_plot).all()
+        return DB.session.query(MfsPlot).filter_by(id_parent=id_plot).all()
 
     def get_transect_by_id(self, id_transect):
-        return DB.session.get(SfsTransect, id_transect)
+        return DB.session.get(MfsTransect, id_transect)
 
     def save(self, plot):
         DB.session.add(plot)

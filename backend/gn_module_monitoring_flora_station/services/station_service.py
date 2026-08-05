@@ -4,7 +4,7 @@ from geonature.core.gn_monitoring.models import TBaseVisits
 from ref_geo.models import LAreas
 from pypnusershub.db.models import User, Organisme
 
-from ..models import SfsStation
+from ..models import MfsStation
 from ..repositories.station_repository import StationRepository
 
 
@@ -56,7 +56,7 @@ class StationService:
         q = self.station_repo.get_stations_list_query(municipality_type_code)
 
         if "filterTaxon" in filters:
-            q = q.where(SfsStation.cd_nom == filters["filterTaxon"])
+            q = q.where(MfsStation.cd_nom == filters["filterTaxon"])
         if "year" in filters:
             q = q.where(func.extract("year", TBaseVisits.visit_date_min) == filters["year"])
         if "area_name" in filters:

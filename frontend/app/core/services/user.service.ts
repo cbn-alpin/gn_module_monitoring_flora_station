@@ -23,7 +23,7 @@ export class UserService {
 
   getCurrentUserRights() {
     return this._http.get<any>(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/users/current/cruved`
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/users/current/cruved`
     );
   }
 

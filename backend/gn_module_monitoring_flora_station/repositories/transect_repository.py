@@ -15,7 +15,7 @@ from pypnnomenclature.models import TNomenclatures
 from pypnusershub.db.models import Organisme, User
 from geonature.core.gn_permissions.tools import get_scopes_by_action
 
-from ..models import SfsTransect, SfsStation
+from ..models import MfsTransect, MfsStation
 
 
 class TransectRepository:
@@ -25,10 +25,10 @@ class TransectRepository:
     """
 
     def get_by_id(self, id_transect):
-        return DB.session.get(SfsTransect, id_transect)
+        return DB.session.get(MfsTransect, id_transect)
 
     def get_by_station(self, id_station):
-        return DB.session.query(SfsTransect).filter_by(id_station=id_station).all()
+        return DB.session.query(MfsTransect).filter_by(id_station=id_station).all()
 
     def save(self, transect):
         DB.session.add(transect)
@@ -51,11 +51,11 @@ class TransectRepository:
     def get_sites_without_transect(self, site_type_code):
         q = (
             select(TBaseSites)
-            .outerjoin(SfsTransect, TBaseSites.id_base_site == SfsTransect.id_base_site)
+            .outerjoin(MfsTransect, TBaseSites.id_base_site == MfsTransect.id_base_site)
             .where(
                 and_(
                     TBaseSites.id_nomenclature_type_site == self.get_id_type_site(site_type_code),
-                    SfsTransect.id_base_site == None,
+                    MfsTransect.id_base_site == None,
                 )
             )
         )
@@ -69,24 +69,24 @@ class TransectRepository:
     def get_transect_detail(self, id_site, municipality_type_code):
         return DB.session.execute(
             select(
-                SfsTransect,
+                MfsTransect,
                 TNomenclatures,
                 func.string_agg(distinct(LAreas.area_name), ", "),
                 func.string_agg(distinct(Organisme.nom_organisme), ", "),
                 Taxref.lb_nom,
             )
             .filter_by(id_base_site=id_site)
-            .outerjoin(TBaseVisits, TBaseVisits.id_base_site == SfsTransect.id_base_site)
+            .outerjoin(TBaseVisits, TBaseVisits.id_base_site == MfsTransect.id_base_site)
             .outerjoin(
                 TNomenclatures,
-                SfsTransect.id_nomenclature_plot_position == TNomenclatures.id_nomenclature,
+                MfsTransect.id_nomenclature_plot_position == TNomenclatures.id_nomenclature,
             )
-            .outerjoin(SfsStation, SfsTransect.id_station == SfsStation.id_station)
-            .outerjoin(Taxref, SfsStation.cd_nom == Taxref.cd_nom)
+            .outerjoin(MfsStation, MfsTransect.id_station == MfsStation.id_station)
+            .outerjoin(Taxref, MfsStation.cd_nom == Taxref.cd_nom)
             .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
             .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
             .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
-            .outerjoin(corSiteArea, corSiteArea.c.id_base_site == SfsTransect.id_base_site)
+            .outerjoin(corSiteArea, corSiteArea.c.id_base_site == MfsTransect.id_base_site)
             .outerjoin(
                 LAreas,
                 and_(
@@ -94,7 +94,7 @@ class TransectRepository:
                     LAreas.id_type == func.ref_geo.get_id_area_type(municipality_type_code),
                 ),
             )
-            .group_by(SfsTransect.id_transect, TNomenclatures.id_nomenclature, Taxref.lb_nom)
+            .group_by(MfsTransect.id_transect, TNomenclatures.id_nomenclature, Taxref.lb_nom)
         ).first()
 
     def get_edit_scope_info(self, module_code):
@@ -106,29 +106,29 @@ class TransectRepository:
     def get_transects_list_query(self):
         return (
             select(
-                SfsTransect,
+                MfsTransect,
                 func.max(TBaseVisits.visit_date_min),
                 Taxref.lb_nom,
                 func.count(distinct(TBaseVisits.id_base_visit)),
                 func.string_agg(distinct(Organisme.nom_organisme), ", "),
             )
-            .outerjoin(TBaseVisits, TBaseVisits.id_base_site == SfsTransect.id_base_site)
-            .outerjoin(SfsStation, SfsTransect.id_station == SfsStation.id_station)
-            .outerjoin(Taxref, SfsStation.cd_nom == Taxref.cd_nom)
+            .outerjoin(TBaseVisits, TBaseVisits.id_base_site == MfsTransect.id_base_site)
+            .outerjoin(MfsStation, MfsTransect.id_station == MfsStation.id_station)
+            .outerjoin(Taxref, MfsStation.cd_nom == Taxref.cd_nom)
             .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
             .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
             .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
-            .group_by(SfsTransect, Taxref.lb_nom)
+            .group_by(MfsTransect, Taxref.lb_nom)
         )
 
     def get_transects_date_query(self):
         return (
             select(
-                SfsTransect.id_base_site,
+                MfsTransect.id_base_site,
                 func.max(TBaseVisits.visit_date_min),
             )
-            .outerjoin(TBaseVisits, TBaseVisits.id_base_site == SfsTransect.id_base_site)
-            .group_by(SfsTransect.id_base_site)
+            .outerjoin(TBaseVisits, TBaseVisits.id_base_site == MfsTransect.id_base_site)
+            .group_by(MfsTransect.id_base_site)
         )
 
     def create_site(self, transect_label, base_site_description, geom_start, geom_end, module_code, site_type_code):
@@ -159,12 +159,12 @@ class TransectRepository:
 
     def update_station_centroid(self, id_station):
         DB.session.execute(
-            update(SfsStation)
-            .where(SfsStation.id_station == id_station)
+            update(MfsStation)
+            .where(MfsStation.id_station == id_station)
             .values(
                 geom=DB.session.scalar(
-                    select(func.ST_Centroid(func.ST_Collect(SfsTransect.geom_start))).where(
-                        SfsTransect.id_station == id_station
+                    select(func.ST_Centroid(func.ST_Collect(MfsTransect.geom_start))).where(
+                        MfsTransect.id_station == id_station
                     )
                 )
             )
@@ -173,11 +173,11 @@ class TransectRepository:
     def get_transects_by_station_query(self, id_station):
         return (
             select(
-                SfsTransect,
+                MfsTransect,
                 func.count(distinct(TBaseVisits.id_base_visit)).label("nb_visits"),
                 func.max(TBaseVisits.visit_date_min).label("last_visit"),
             )
-            .where(SfsTransect.id_station == id_station)
-            .outerjoin(TBaseVisits, TBaseVisits.id_base_site == SfsTransect.id_base_site)
-            .group_by(SfsTransect.id_transect)
+            .where(MfsTransect.id_station == id_station)
+            .outerjoin(TBaseVisits, TBaseVisits.id_base_site == MfsTransect.id_base_site)
+            .group_by(MfsTransect.id_transect)
         )

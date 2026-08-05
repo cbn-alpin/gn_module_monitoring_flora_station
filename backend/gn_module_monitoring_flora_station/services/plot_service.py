@@ -54,7 +54,7 @@ class PlotService:
         return result
 
     def create_plot(self, plot_data, max_plot_depth):
-        from ..models import SfsPlot
+        from ..models import MfsPlot
 
         sub_plots = plot_data.pop("sub_plots", [])
         plot_data.pop("temp_id", None)
@@ -73,7 +73,7 @@ class PlotService:
             if depth > max_plot_depth:
                 raise ValueError(f"La profondeur maximale de {max_plot_depth} niveaux est atteinte")
 
-        plot = SfsPlot(**plot_data)
+        plot = MfsPlot(**plot_data)
         self.plot_repo.save(plot)
 
         for sub_plot_data in sub_plots:

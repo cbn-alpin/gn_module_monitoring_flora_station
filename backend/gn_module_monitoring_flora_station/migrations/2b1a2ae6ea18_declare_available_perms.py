@@ -35,13 +35,13 @@ def upgrade():
             JOIN gn_permissions.bib_actions a ON a.code_action IN ('C', 'R', 'U', 'E', 'D')
             JOIN (
                 VALUES
-                    ('C', 'Ajouter des données au module SFS'),
-                    ('R', 'Voir les données du module SFS'),
-                    ('U', 'Modifier les données du module SFS'),
-                    ('E', 'Exporter les données du module SFS'),
-                    ('D', 'Supprimer les données du module SFS')
+                    ('C', 'Ajouter des données au module MFS'),
+                    ('R', 'Voir les données du module MFS'),
+                    ('U', 'Modifier les données du module MFS'),
+                    ('E', 'Exporter les données du module MFS'),
+                    ('D', 'Supprimer les données du module MFS')
             ) AS label_data(code_action, label) ON label_data.code_action = a.code_action
-            WHERE m.module_code = 'SFS'
+            WHERE m.module_code = 'MFS'
             """
         )
     )
@@ -52,7 +52,7 @@ def downgrade():
         text(
             """
             DELETE FROM gn_permissions.t_permissions_available
-            WHERE id_module = (SELECT id_module FROM gn_commons.t_modules WHERE module_code = 'SFS')
+            WHERE id_module = (SELECT id_module FROM gn_commons.t_modules WHERE module_code = 'MFS')
             """
         )
     )

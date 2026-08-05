@@ -7,7 +7,7 @@ from pypnnomenclature.models import TNomenclatures
 
 
 @serializable
-class SfsPlotSurveyDisturbance(MonitoringFloreStation):
+class MfsPlotSurveyDisturbance(MonitoringFloreStation):
     __tablename__ = "cor_plot_survey_disturbances"
     __table_args__ = {"schema": "pr_monitoring_flora_station"}
 
@@ -35,7 +35,7 @@ class SfsPlotSurveyDisturbance(MonitoringFloreStation):
 
 
 @serializable
-class SfsVisitDisturbance(MonitoringFloreStation):
+class MfsVisitDisturbance(MonitoringFloreStation):
     __tablename__ = "cor_visit_disturbances"
     __table_args__ = {"schema": "pr_monitoring_flora_station"}
 

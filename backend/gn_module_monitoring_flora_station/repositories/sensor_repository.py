@@ -2,7 +2,7 @@ from sqlalchemy import select, func
 
 from geonature.utils.env import DB
 
-from ..models import SfsSensor, SfsTransect
+from ..models import MfsSensor, MfsTransect
 
 
 class SensorRepository:
@@ -11,17 +11,17 @@ class SensorRepository:
     """
 
     def get_by_id(self, id_sensor):
-        return DB.session.get(SfsSensor, id_sensor)
+        return DB.session.get(MfsSensor, id_sensor)
 
     def get_sensor_detail(self, id_sensor):
         return DB.session.execute(
-            select(SfsSensor, SfsTransect.transect_label)
+            select(MfsSensor, MfsTransect.transect_label)
             .filter_by(id_sensor=id_sensor)
-            .outerjoin(SfsTransect, SfsSensor.id_transect == SfsTransect.id_transect)
+            .outerjoin(MfsTransect, MfsSensor.id_transect == MfsTransect.id_transect)
         ).first()
 
     def get_by_transect_query(self, id_transect):
-        return select(SfsSensor).filter_by(id_transect=id_transect)
+        return select(MfsSensor).filter_by(id_transect=id_transect)
 
     def count(self, query):
         return DB.session.scalar(select(func.count("*")).select_from(query))

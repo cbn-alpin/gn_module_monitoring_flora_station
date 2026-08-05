@@ -1,12 +1,12 @@
 
 from .base import MonitoringFloreStation
-from .transect import SfsTransect
+from .transect import MfsTransect
 from utils_flask_sqla.serializers import serializable
 from geonature.utils.env import DB
 
 
 @serializable
-class SfsSensor(MonitoringFloreStation):
+class MfsSensor(MonitoringFloreStation):
     __tablename__ = "t_temperature_sensors"
     __table_args__ = (
         DB.UniqueConstraint("serial_number", "id_transect", "install_date"),
@@ -31,4 +31,4 @@ class SfsSensor(MonitoringFloreStation):
         DB.Date,
         nullable=False
     )
-    transect = DB.relationship(SfsTransect)
+    transect = DB.relationship(MfsTransect)

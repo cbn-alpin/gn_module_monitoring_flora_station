@@ -7,7 +7,7 @@ from geonature.core.gn_permissions import decorators as permissions
 from utils_flask_sqla.response import json_resp
 
 from ..blueprint import blueprint
-from ..models import SfsSensor
+from ..models import MfsSensor
 from ..services.sensor_service import SensorService
 from gn_module_monitoring_flora_station import MODULE_CODE
 
@@ -52,7 +52,7 @@ def get_one_sensor(id_sensor):
 def update_sensor(id_sensor, scope):
     data = dict(request.get_json())
     try:
-        sensor = SfsSensor(**data)
+        sensor = MfsSensor(**data)
         sensor = sensor_service.update_sensor(sensor)
         return sensor_service.build_sensor_detail(sensor.id_sensor)
     except Exception as e:

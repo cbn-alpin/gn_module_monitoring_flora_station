@@ -6,7 +6,7 @@ from geonature.core.gn_permissions import decorators as permissions
 from utils_flask_sqla.response import json_resp
 
 from ..blueprint import blueprint
-from ..models import SfsPlot
+from ..models import MfsPlot
 from ..services.plot_service import PlotService
 from gn_module_monitoring_flora_station import MODULE_CODE
 
@@ -59,7 +59,7 @@ def get_one_plot(id_plot):
 def update_plot(id_plot, scope):
     data = dict(request.get_json())
     try:
-        plot = SfsPlot(**data)
+        plot = MfsPlot(**data)
         plot = plot_service.update_plot(plot)
         return plot.as_dict()
     except Exception as e:

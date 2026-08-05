@@ -5,7 +5,7 @@ from utils_flask_sqla.serializers import serializable
 
 
 @serializable
-class SfsPlot(MonitoringFloreStation):
+class MfsPlot(MonitoringFloreStation):
     __tablename__ = "t_plots"
     __table_args__ = {"schema": "pr_monitoring_flora_station"}
 
@@ -27,10 +27,10 @@ class SfsPlot(MonitoringFloreStation):
         ),
     )
     parent = DB.relationship(
-        "gn_module_monitoring_flora_station.models.plot.SfsPlot", remote_side=[id_plot]
+        "gn_module_monitoring_flora_station.models.plot.MfsPlot", remote_side=[id_plot]
     )
     sub_plots = DB.relationship(
-        "gn_module_monitoring_flora_station.models.plot.SfsPlot",
+        "gn_module_monitoring_flora_station.models.plot.MfsPlot",
         foreign_keys=[id_parent],
         passive_deletes=True,
         overlaps="parent",

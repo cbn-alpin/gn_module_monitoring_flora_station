@@ -15,7 +15,7 @@ export class StoreService {
   constructor(
     private config: ConfigService,
   ) {
-    this.sfsConfig = this.config['SFS'];
+    this.sfsConfig = this.config['MFS'];
     this.urlLoad = `${this.config.API_ENDPOINT}/${this.sfsConfig.MODULE_URL}/visits/export`;
   }
 

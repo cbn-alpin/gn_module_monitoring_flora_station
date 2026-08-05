@@ -15,58 +15,58 @@ export class StationService {
     for (let key in params) {
       if (params[key]) myParams = myParams.set(key, params[key]);
     }
-    return this._http.get(`${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/stations`, {
+    return this._http.get(`${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/stations`, {
       params: myParams,
     });
   }
 
   getOneStation(id_station: any) {
     return this._http.get(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/stations/${id_station}`
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/stations/${id_station}`
     );
   }
 
   addStation(station: any) {
     return this._http.post(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/stations`,
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/stations`,
       station
     );
   }
 
   updateStation(station: any) {
     return this._http.patch(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/stations/${station.id_station}`,
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/stations/${station.id_station}`,
       station
     );
   }
 
   deleteStation(id_station: any) {
     return this._http.delete(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/stations/${id_station}`
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/stations/${id_station}`
     );
   }
 
   getTransectsByStation(id_station: number) {
     return this._http.get(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/stations/${id_station}/transects`
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/stations/${id_station}/transects`
     );
   }
 
   getStationsYears() {
     return this._http.get(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/stations/years`
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/stations/years`
     );
   }
 
   getStationsArea() {
     return this._http.get(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/stations/area`
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/stations/area`
     );
   }
 
   getOrganism() {
     return this._http.get(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/stations/organism`
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/stations/organism`
     );
   }
 }

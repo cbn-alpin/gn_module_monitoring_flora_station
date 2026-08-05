@@ -37,9 +37,9 @@ class SensorService:
         return None
 
     def create_sensor(self, sensor_data):
-        from ..models import SfsSensor
+        from ..models import MfsSensor
 
-        sensor = SfsSensor(**sensor_data)
+        sensor = MfsSensor(**sensor_data)
         return self.sensor_repo.save(sensor)
 
     def update_sensor(self, sensor):

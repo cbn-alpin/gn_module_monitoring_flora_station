@@ -6,7 +6,7 @@ from pypnnomenclature.models import TNomenclatures
 
 
 @serializable
-class SfsPlotSurveyStratum(MonitoringFloreStation):
+class MfsPlotSurveyStratum(MonitoringFloreStation):
     __tablename__ = "cor_plot_survey_strata"
     __table_args__ = {"schema": "pr_monitoring_flora_station"}
 
@@ -28,7 +28,7 @@ class SfsPlotSurveyStratum(MonitoringFloreStation):
 
 
 @serializable
-class SfsPlotSurveySubstrate(MonitoringFloreStation):
+class MfsPlotSurveySubstrate(MonitoringFloreStation):
     __tablename__ = "cor_plot_survey_substrates"
     __table_args__ = {"schema": "pr_monitoring_flora_station"}
 

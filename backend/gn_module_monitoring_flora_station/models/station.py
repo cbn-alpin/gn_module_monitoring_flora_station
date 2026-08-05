@@ -1,5 +1,5 @@
 from .base import MonitoringFloreStation
-from .transect import SfsTransect
+from .transect import MfsTransect
 from geonature.utils.env import DB, db
 
 from utils_flask_sqla.serializers import serializable
@@ -9,7 +9,7 @@ from geoalchemy2 import Geometry
 
 @serializable
 @geoserializable
-class SfsStation(MonitoringFloreStation):
+class MfsStation(MonitoringFloreStation):
     __tablename__ = "t_stations"
     __table_args__ = {
         "schema": "pr_monitoring_flora_station",
@@ -39,4 +39,4 @@ class SfsStation(MonitoringFloreStation):
         DB.Boolean,
         nullable=True,
     )
-    cor_transect = DB.relationship(SfsTransect, overlaps="station")
+    cor_transect = DB.relationship(MfsTransect, overlaps="station")

@@ -15,27 +15,27 @@ export class TransectService {
     for (let key in params) {
       if (params[key]) myParams = myParams.set(key, params[key]);
     }
-    return this._http.get(`${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/transects`, {
+    return this._http.get(`${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/transects`, {
       params: myParams,
     });
   }
 
   getOneTransect(idSite: any) {
     return this._http.get(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/transects/${idSite}`
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/transects/${idSite}`
     );
   }
 
   addTransect(transect: any) {
     return this._http.post(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/transects`,
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/transects`,
       transect
     );
   }
 
   updateTransect(transect: any) {
     return this._http.patch(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/transects/${transect.id_transect}`,
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/transects/${transect.id_transect}`,
       transect
     );
   }
@@ -45,7 +45,7 @@ export class TransectService {
     for (let key in params) {
       if (params[key]) myParams = myParams.set(key, params[key]);
     }
-    return this._http.get(`${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/sites`, {
+    return this._http.get(`${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/sites`, {
       params: myParams,
     });
   }

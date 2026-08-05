@@ -8,7 +8,7 @@ from geonature.core.gn_permissions import decorators as permissions
 from utils_flask_sqla.response import json_resp
 
 from ..blueprint import blueprint
-from ..models import SfsStation
+from ..models import MfsStation
 from ..services.station_service import StationService
 from gn_module_monitoring_flora_station import MODULE_CODE
 
@@ -21,7 +21,7 @@ station_service = StationService()
 def add_station(scope):
     data = dict(request.get_json())
     try:
-        station = SfsStation(**data)
+        station = MfsStation(**data)
         station_service.create_station(station)
         return station_service.build_station_feature(
             station.id_station, blueprint.config["municipality_type_code"]
@@ -104,7 +104,7 @@ def get_one_station(id_station):
 def update_station(id_station, scope):
     data = dict(request.get_json())
     try:
-        station = SfsStation(**data)
+        station = MfsStation(**data)
         station = station_service.update_station(station)
         return station_service.build_station_feature(
             station.id_station, blueprint.config["municipality_type_code"]

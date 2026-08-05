@@ -79,8 +79,8 @@ class TransectService:
         q = self.transect_repo.get_transects_list_query()
 
         if "filterTaxon" in filters:
-            from ..models import SfsStation
-            q = q.where(SfsStation.cd_nom == filters["filterTaxon"])
+            from ..models import MfsStation
+            q = q.where(MfsStation.cd_nom == filters["filterTaxon"])
 
         q_date = None
         if "date_low" in filters and "date_up" in filters:
@@ -96,7 +96,7 @@ class TransectService:
         return q, q_date
 
     def create_transect_with_site(self, data, plots, sensors, module_code, site_type_code, create_plot_fn):
-        from ..models import SfsTransect, SfsSensor
+        from ..models import MfsTransect, MfsSensor
 
         site = self.transect_repo.create_site(
             transect_label=data.get("transect_label"),
@@ -108,7 +108,7 @@ class TransectService:
         )
 
         data["id_base_site"] = site.id_base_site
-        transect = SfsTransect(**data)
+        transect = MfsTransect(**data)
         self.transect_repo.save(transect)
 
         for plot_data in plots:
@@ -117,7 +117,7 @@ class TransectService:
 
         for sensor_data in sensors:
             sensor_data["id_transect"] = transect.id_transect
-            sensor = SfsSensor(**sensor_data)
+            sensor = MfsSensor(**sensor_data)
             self.transect_repo.save(sensor)
 
         if transect.id_station:
@@ -126,7 +126,7 @@ class TransectService:
         return site.id_base_site
 
     def update_transect_with_site(self, data, plots, create_plot_fn):
-        from ..models import SfsTransect
+        from ..models import MfsTransect
 
         self.transect_repo.update_site(
             id_base_site=data.get("id_base_site"),
@@ -135,7 +135,7 @@ class TransectService:
             geom_end=data.get("geom_end"),
         )
 
-        transect = SfsTransect(**data)
+        transect = MfsTransect(**data)
         transect = self.transect_repo.merge(transect)
 
         for plot_data in plots:

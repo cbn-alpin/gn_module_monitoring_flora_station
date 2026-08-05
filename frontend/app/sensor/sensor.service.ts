@@ -12,27 +12,27 @@ export class SensorService {
 
   getSensorsByTransect(id_transect: any) {
     return this._http.get(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/transects/${id_transect}/sensors`
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/transects/${id_transect}/sensors`
     );
   }
 
   addSensor(sensor: any) {
     return this._http.post(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/sensors`,
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/sensors`,
       sensor
     );
   }
 
   updateSensor(sensor: any) {
     return this._http.patch(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/sensors/${sensor.id_sensor}`,
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/sensors/${sensor.id_sensor}`,
       sensor
     );
   }
 
   deleteSensor(id_sensor: any) {
     return this._http.delete(
-      `${this.config.API_ENDPOINT}${this.config['SFS']['MODULE_URL']}/sensors/${id_sensor}`
+      `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/sensors/${id_sensor}`
     );
   }
 }

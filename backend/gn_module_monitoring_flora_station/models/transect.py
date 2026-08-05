@@ -11,7 +11,7 @@ from geojson import Feature, LineString
 
 @serializable
 @geoserializable
-class SfsTransect(MonitoringFloreStation):
+class MfsTransect(MonitoringFloreStation):
     __tablename__ = "t_transects"
     __table_args__ = {"schema": "pr_monitoring_flora_station"}
 
@@ -44,10 +44,10 @@ class SfsTransect(MonitoringFloreStation):
 
     t_base_site = DB.relationship("TBaseSites")
     cor_plots = DB.relationship(
-        "gn_module_monitoring_flora_station.models.plot.SfsPlot", passive_deletes=True
+        "gn_module_monitoring_flora_station.models.plot.MfsPlot", passive_deletes=True
     )
     station = DB.relationship(
-        "gn_module_monitoring_flora_station.models.station.SfsStation", overlaps="cor_transect"
+        "gn_module_monitoring_flora_station.models.station.MfsStation", overlaps="cor_transect"
     )
 
     def get_geofeature(self, fields=[]):
