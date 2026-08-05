@@ -3,7 +3,7 @@ from sqlalchemy import select
 from geonature.utils.env import DB
 from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
 
-from ..models import SfsPlotSurveyStratum, SfsPlotSurveySubstrate
+from ..models import MfsPlotSurveyStratum, MfsPlotSurveySubstrate
 
 
 class CoverRepository:
@@ -15,7 +15,7 @@ class CoverRepository:
 
     def get_strats_by_survey(self, id_plot_survey):
         return (
-            DB.session.query(SfsPlotSurveyStratum)
+            DB.session.query(MfsPlotSurveyStratum)
             .filter_by(id_plot_survey=id_plot_survey)
             .all()
         )
@@ -35,7 +35,7 @@ class CoverRepository:
 
     def get_substrates_by_survey(self, id_plot_survey):
         return (
-            DB.session.query(SfsPlotSurveySubstrate)
+            DB.session.query(MfsPlotSurveySubstrate)
             .filter_by(id_plot_survey=id_plot_survey)
             .all()
         )

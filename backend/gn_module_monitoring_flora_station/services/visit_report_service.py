@@ -56,42 +56,38 @@ class VisitReportService:
             return None
 
         visit = data.as_dict(
-            fields=[
-                "cor_releve_plot.cor_releve_strats",
-                "cor_releve_plot.cor_releve_substrats",
-                "cor_releve_plot.cor_releve_perturbations",
-                "cor_visit_perturbation.t_nomenclature",
-                "observers",
-            ]
+        fields=[
+            "cor_releve_plot.cor_releve_strats",
+            "cor_releve_plot.cor_releve_substrats",
+            "cor_releve_plot.cor_releve_perturbations.t_nomenclature",
+            "cor_visit_perturbation.t_nomenclature",
+            "observers",
+        ]
         )
         digitiser = self.visit_report_repo.get_digitiser(data.id_digitiser)
         if digitiser:
             visit["id_organisme"] = digitiser.id_organisme
 
-        for releve in visit["cor_releve_plot"]:
-            plot_data = {}
-            for field in ("is_exclosure", "remarks", "taxon_present", "flowering_stems_count", "non_flowering_stems_count"):
-                if field in releve:
-                    plot_data[field] = releve.pop(field)
-            if "cor_releve_strats" in releve:
-                plot_data["strata_survey"] = releve.pop("cor_releve_strats")
-            if "cor_releve_substrats" in releve:
-                plot_data["substrates_survey"] = releve.pop("cor_releve_substrats")
-            if "cor_releve_perturbations" in releve:
-                plot_data["disturbances_survey"] = releve.pop("cor_releve_perturbations")
-            releve["plot_data"] = plot_data
+        for plot_survey in visit["cor_releve_plot"]:
+            plot_survey["strata_survey"] = plot_survey.pop("cor_releve_strats", [])
+            plot_survey["substrates_survey"] = plot_survey.pop("cor_releve_substrats", [])
+            plot_survey["disturbances_survey"] = plot_survey.pop("cor_releve_perturbations", [])
 
         return visit
 
     def create_visit(self, data, module_code, metadata_code):
         from ..models import (
-            SfsPlotSurvey, SfsVisit, SfsVisitDisturbance,
-            SfsPlotSurveyStratum, SfsPlotSurveySubstrate, SfsPlotSurveyDisturbance,
+            MfsPlotSurvey,
+            MfsVisit,
+            MfsVisitDisturbance,
+            MfsPlotSurveyStratum,
+            MfsPlotSurveySubstrate,
+            MfsPlotSurveyDisturbance,
         )
 
         self.check_year_visit(data["id_base_site"], data["visit_date_min"])
 
-        releve_plots = data.pop("plots", [])
+        plot_surveys = data.pop("plots", [])
         observers_ids = data.pop("observers", [])
         disturbances = data.pop("perturbations", None) or []
 
@@ -107,30 +103,28 @@ class VisitReportService:
         if not data.get("id_digitiser"):
             data["id_digitiser"] = g.current_user.id_role
 
-        visit = SfsVisit(**data)
+        visit = MfsVisit(**data)
 
-        for dist in disturbances:
-            visit.cor_visit_perturbation.append(SfsVisitDisturbance(**dist))
+        for disturbance in disturbances:
+            visit.cor_visit_perturbation.append(MfsVisitDisturbance(**disturbance))
 
-        for releve in releve_plots:
-            plot_data = releve.pop("plot_data", {})
-            releve.update({
-                "is_exclosure": plot_data.get("is_exclosure"),
-                "remarks": plot_data.get("remarks"),
-                "taxon_present": plot_data.get("taxon_present"),
-                "flowering_stems_count": plot_data.get("flowering_stems_count"),
-                "non_flowering_stems_count": plot_data.get("non_flowering_stems_count"),
-            })
-            plot_survey = SfsPlotSurvey(**releve)
+        for plot_survey_data in plot_surveys:
+            strata = plot_survey_data.pop("strata_survey", [])
+            substrates = plot_survey_data.pop("substrates_survey", [])
+            disturbances_survey = plot_survey_data.pop("disturbances_survey", [])
 
-            for stratum in plot_data.get("strata_survey", []):
+            plot_survey = MfsPlotSurvey(**plot_survey_data)
+
+            for stratum in strata:
                 if stratum.get("cover_percentage"):
-                    plot_survey.cor_releve_strats.append(SfsPlotSurveyStratum(**stratum))
-            for substrate in plot_data.get("substrates_survey", []):
+                    plot_survey.cor_releve_strats.append(MfsPlotSurveyStratum(**stratum))
+
+            for substrate in substrates:
                 if substrate.get("cover_percentage"):
-                    plot_survey.cor_releve_substrats.append(SfsPlotSurveySubstrate(**substrate))
-            for disturbance in plot_data.get("disturbances_survey", []):
-                plot_survey.cor_releve_perturbations.append(SfsPlotSurveyDisturbance(**disturbance))
+                    plot_survey.cor_releve_substrats.append(MfsPlotSurveySubstrate(**substrate))
+
+            for disturbance in disturbances_survey:
+                plot_survey.cor_releve_perturbations.append(MfsPlotSurveyDisturbance(**disturbance))
 
             visit.cor_releve_plot.append(plot_survey)
 
@@ -142,56 +136,62 @@ class VisitReportService:
 
     def update_visit(self, id_visit, data):
         from ..models import (
-            SfsPlotSurvey, SfsVisit, SfsVisitDisturbance,
-            SfsPlotSurveyStratum, SfsPlotSurveySubstrate, SfsPlotSurveyDisturbance,
+            MfsPlotSurvey,
+            MfsVisit,
+            MfsVisitDisturbance,
+            MfsPlotSurveyStratum,
+            MfsPlotSurveySubstrate,
+            MfsPlotSurveyDisturbance,
         )
 
-        existing_visit = self.visit_report_repo.get_by_id(id_visit)
+        existing_visit = self.visit_report_repo.get_visit_by_id(id_visit)
         if existing_visit is None:
             raise NotFound(f"Visit {id_visit} does not exist")
 
         existing_dict = existing_visit.as_dict()
         if data["visit_date_min"] != existing_dict["visit_date_min"]:
-            self.check_year_visit(data["id_base_site"], data["visit_date_min"], id_base_visit=id_visit)
+            self.check_year_visit(
+                data["id_base_site"], data["visit_date_min"], id_base_visit=id_visit
+            )
 
-        releve_plots = data.pop("plots", [])
+        plot_surveys = data.pop("plots", [])
         observers_ids = data.pop("observers", [])
         disturbances = data.pop("perturbations", [])
 
-        visit = SfsVisit(**data)
+        visit = MfsVisit(**data)
 
-        for releve in releve_plots:
-            plot_data = releve.pop("plot_data", {})
-            releve.update({
-                "is_exclosure": plot_data.get("is_exclosure"),
-                "remarks": plot_data.get("remarks"),
-                "taxon_present": plot_data.get("taxon_present"),
-                "flowering_stems_count": plot_data.get("flowering_stems_count"),
-                "non_flowering_stems_count": plot_data.get("non_flowering_stems_count"),
-            })
-            plot_survey = SfsPlotSurvey(**releve)
+        for plot_survey_data in plot_surveys:
+            strata = plot_survey_data.pop("strata_survey", [])
+            substrates = plot_survey_data.pop("substrates_survey", [])
+            disturbances_survey = plot_survey_data.pop("disturbances_survey", [])
 
-            for stratum in plot_data.get("strata_survey", []):
+            plot_survey = MfsPlotSurvey(**plot_survey_data)
+
+            for stratum in strata:
                 if stratum.get("cover_percentage"):
-                    plot_survey.cor_releve_strats.append(SfsPlotSurveyStratum(**stratum))
+                    plot_survey.cor_releve_strats.append(MfsPlotSurveyStratum(**stratum))
                 elif "id_plot_survey_stratum" in stratum:
                     self.visit_report_repo.delete_stratum(stratum["id_plot_survey_stratum"])
 
-            for substrate in plot_data.get("substrates_survey", []):
+            for substrate in substrates:
                 if substrate.get("cover_percentage"):
-                    plot_survey.cor_releve_substrats.append(SfsPlotSurveySubstrate(**substrate))
+                    plot_survey.cor_releve_substrats.append(MfsPlotSurveySubstrate(**substrate))
                 elif "id_plot_survey_substrate" in substrate:
-                    self.visit_report_repo.delete_substrate(substrate["id_plot_survey_substrate"])
+                    self.visit_report_repo.delete_substrate(
+                        substrate["id_plot_survey_substrate"]
+                    )
 
-            self.visit_report_repo.delete_plot_disturbances(releve.get("id_plot_survey"))
-            for disturbance in plot_data.get("disturbances_survey", []):
-                plot_survey.cor_releve_perturbations.append(SfsPlotSurveyDisturbance(**disturbance))
+            self.visit_report_repo.delete_plot_disturbances(
+                plot_survey_data.get("id_plot_survey")
+            )
+            for disturbance in disturbances_survey:
+                plot_survey.cor_releve_perturbations.append(MfsPlotSurveyDisturbance(**disturbance))
 
             visit.cor_releve_plot.append(plot_survey)
 
         self.visit_report_repo.delete_visit_disturbances(id_visit)
         for disturbance in disturbances:
-            visit.cor_visit_perturbation.append(SfsVisitDisturbance(**disturbance))
+            visit.cor_visit_perturbation.append(MfsVisitDisturbance(**disturbance))
 
         observers = self.visit_report_repo.get_users_by_ids(observers_ids)
         for observer in observers:
