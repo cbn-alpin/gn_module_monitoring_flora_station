@@ -196,7 +196,7 @@
             <div class="row">
               <div class="col">
                 <label>Azimut</label>
-                <input type="number" class="form-control form-control-sm" [formControl]="formTransect.controls.azimut" max="359" min="0" step="0.01" placeholder="0 à 359°"/>
+                <input type="number" class="form-control form-control-sm" [formControl]="formTransect.controls.azimuth" max="359" min="0" step="0.01" placeholder="0 à 359°"/>
               </div>
               <div class="col">
                 <label>Informations complémentaires de localisation</label>
@@ -360,7 +360,65 @@
         </fieldset>
       </form>
     </div>
+  
   </div>
+    <ng-container *ngIf="!isNew">
+      <div class="card mt-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+  <h4 class="card-title">Liste des visites</h4>
+  <div class="d-flex align-items-center">
+    <pnx-modal-download
+        labelButton="Télécharger ces visites"
+        [pathDownload]="storeService.urlLoad"
+        [exportFormat]="storeService.sfsConfig.export_available_format"
+        [queryString]="storeService.queryString"
+      >
+    </pnx-modal-download>
+    <button
+      *ngIf="addVisitIsAllowed"
+      class="btn btn-sm btn-success box-shadow ml-2"
+      (click)="onNewVisit()"
+    >
+      <i class="fa fa-plus-circle" aria-hidden="true"> </i>
+      Ajouter une nouvelle visite
+    </button>
+  </div>
+</div>
+
+      <div class="card-body py-0">
+        <ngx-datatable
+          class="material"
+          [columnMode]="'force'"
+          [rows]="rows"
+          [headerHeight]="50"
+          [footerHeight]="50"
+          [rowHeight]="'auto'"
+          [messages]="storeService.sfsConfig.list_visit_message"
+          [offset]="page.pageNumber"
+          [limit]="page.size"
+          [selectionType]="'single'"
+          (select)="onRowSelect($event)"
+        >
+          <ngx-datatable-column
+            *ngFor="let col of storeService.sfsConfig.default_list_visit_columns"
+            [name]="col.name"
+            [prop]="col.prop"
+            maxWidth="col.maxWidth"
+          >
+          </ngx-datatable-column>
+          <ngx-datatable-column maxWidth="120">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <i
+                class="btn fa fa-info-circle"
+                aria-hidden="true"
+                (click)="onVisitDetails(row.id_base_visit)"
+              ></i>
+            </ng-template>
+          </ngx-datatable-column>
+        </ngx-datatable>
+      </div>
+    </div>
+  </ng-container>
 </div>
 
 <ng-template #sensorContent let-d="dismiss">
@@ -479,15 +537,21 @@
                 <textarea class="form-control form-control-sm" [formControl]="formStation.controls.remarks" rows="3"></textarea>
             </div>
             <div class="form-group">
-                <!-- TODO: à valider avec le manager — select provisoire, cd_nom référence
-                     taxonomie.taxref (dizaines de milliers d'entrées) -->
-                <small>Taxon * :</small>
-                <select class="form-control form-control-sm" [formControl]="formStation.controls.cd_nom">
-                    <option [ngValue]="null">-- Sélectionnez un taxon --</option>
-                    <option *ngFor="let taxon of taxons" [ngValue]="taxon.cd_nom">
-                        {{ taxon.nom_complet }}
-                    </option>
-                </select>
+                  <small>Taxon :</small>
+                  <pnx-autocomplete
+                    [parentFormControl]="taxonCodeControl"
+                    [charNumber]="3"
+                    [listLength]="50"
+                    [apiEndPoint]="taxonService.searchApiEndPoint"
+                    keyValue="nom_complet_html"
+                    [formatter]="taxonFormatter"
+                    (onChange)="addNewTaxon($event)"
+                    [othersGetParams]="{'fields': 'nom_complet,nom_complet_html,cd_nom'}"
+                    [searchAsParameter]="'true'"
+                    matTooltip="Commencez à saisir les 3 premiers caractères d'un nom scientifique de taxon."
+                    matTooltipPosition="after"
+                >
+                </pnx-autocomplete>
             </div>
         </form>
     </div>
@@ -544,14 +608,20 @@
                 <textarea class="form-control form-control-sm" [formControl]="formEditStation.controls.remarks" rows="3"></textarea>
             </div>
             <div class="form-group">
-                <small>Taxon * :</small>
-                <select class="form-control form-control-sm" [formControl]="formEditStation.controls.cd_nom">
-                    <option [ngValue]="null">-- Sélectionnez un taxon --</option>
-                    <option *ngFor="let taxon of taxons" [ngValue]="taxon.cd_nom">
-                        {{ taxon.nom_complet }}
-                    </option>
-                </select>
-            </div>
+              <small>Taxon * :</small>
+              <pnx-autocomplete
+                  [parentFormControl]="taxonCodeControl"
+                  [charNumber]="3"
+                  [listLength]="50"
+                  [apiEndPoint]="taxonService.searchApiEndPoint"
+                  keyValue="nom_complet_html"
+                  [formatter]="taxonFormatter"
+                  (onChange)="addNewTaxonEdit($event)"
+                  [othersGetParams]="{'fields': 'nom_complet,nom_complet_html,cd_nom'}"
+                  [searchAsParameter]="'true'"
+              >
+              </pnx-autocomplete>
+          </div>
         </form>
     </div>
     <div class="modal-footer">

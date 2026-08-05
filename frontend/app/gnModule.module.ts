@@ -14,15 +14,22 @@ import { PlotService } from './plot/plot.service';
 import { SensorService } from './sensor/sensor.service';
 import { StoreService } from './shared/services/store.service';
 import { UserService } from './core/services/user.service';
+import { TaxonService } from './core/services/taxon.service';
+import { VisitReportService } from './visit-report/visit-report.service';
+
 
 // Components
 import { StationListComponent } from './station/station-list/station-list.component';
 import { TransectFormComponent } from './transect/transect-form/transect-form.component';
+import { VisitReportFormComponent } from './visit-report/visit-report-form/visit-report-form.component';
+import { PlotReleveComponent } from './plot/plot-releve/plot-releve.component';
+
 
 // Routes
 import { routes } from './gnModule.routes';
 
 // Angular Material / CDK
+import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { MatTreeModule } from '@angular/material/tree';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -34,8 +41,9 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
+
 @NgModule({
-  declarations: [StationListComponent, TransectFormComponent],
+  declarations: [StationListComponent, TransectFormComponent,VisitReportFormComponent,PlotReleveComponent],
   imports: [
     GN2CommonModule,
     RouterModule.forChild(routes),
@@ -51,6 +59,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatProgressBarModule,
     MatMenuModule,
     MatTooltipModule,
+    NgxDatatableModule
   ],
   providers: [
     HttpClient,
@@ -58,8 +67,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     TransectService,
     PlotService,
     SensorService,
+    VisitReportService,
     StoreService,
     UserService,
+    TaxonService,
     { provide: MatPaginatorIntl, useClass: FrenchPaginatorIntl },
   ],
   bootstrap: [],

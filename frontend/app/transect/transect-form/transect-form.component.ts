@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { ToastrService } from 'ngx-toastr';
@@ -23,7 +23,9 @@ import { UserService } from '../../core/services/user.service';
 import { ISite } from '../transect.model';
 import { catchError } from 'rxjs/operators';
 import { of } from 'rxjs/observable/of';
-
+import { TaxonService } from '../../core/services/taxon.service';
+import { Page } from '../../shared/models/page.model';
+import { VisitReportService } from '../../visit-report/visit-report.service';
 @Component({
   selector: 'transect-form',
   templateUrl: 'transect-form.component.html',
@@ -45,9 +47,9 @@ export class TransectFormComponent implements OnInit, OnDestroy {
   formTransect: FormGroup;
   formSensor: FormGroup;
   edit_btn: string = 'Editer';
-  // TODO: à valider avec le manager — liste des taxons pour un select provisoire.
-  // cd_nom référence taxonomie.taxref (dizaines de milliers d'entrées), un composant
-  // de recherche/autocomplete sera probablement nécessaire à la place d'un simple select.
+  public rows = [];
+  public page = new Page();
+  public addVisitIsAllowed: boolean = false;
   taxons: any[] = [];
   isNew: boolean;
   plot_position: any;
@@ -68,6 +70,7 @@ export class TransectFormComponent implements OnInit, OnDestroy {
   plotToEdit: any = null;
   plotToEditIndex: number = null;
   formStation: FormGroup;
+  public taxonCodeControl = new FormControl();
   formEditPlot: FormGroup;
   formEditStation: FormGroup;
   private plotIdCounter: number = 0;
@@ -103,7 +106,9 @@ export class TransectFormComponent implements OnInit, OnDestroy {
   constructor(
     private config: ConfigService,
     public storeService: StoreService,
+    public taxonService: TaxonService,
     private transectApi: TransectService,
+    private visitReportApi: VisitReportService,
     private stationApi: StationService,
     private plotApi: PlotService,
     private sensorApi: SensorService,
@@ -119,6 +124,7 @@ export class TransectFormComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.idSite = this.activatedRoute.snapshot.params['idSite'];
+    this.page.size = this.storeService.sfsConfig.items_per_page;
     this.isNew = !this.idSite;
     this.storeService.queryString = this.storeService.queryString.set('id_base_site', this.idSite);
     this.checkPermission();
@@ -126,8 +132,6 @@ export class TransectFormComponent implements OnInit, OnDestroy {
     forkJoin([
       this.transectApi.getAllSites({ id_base_site: this.idSite }).pipe(
         catchError(error => {
-          // Aucun site disponible à réutiliser : ce n'est pas bloquant,
-          // un nouveau site sera créé automatiquement à l'enregistrement.
           if (error.error?.message === 'sites_not_found' || error.status === 404) {
             return of(null);
           }
@@ -142,7 +146,7 @@ export class TransectFormComponent implements OnInit, OnDestroy {
       results => {
         this.sites = results[0];
         this.plot_position = results[1] ? results[1].values : [];
-        this.stations = results[2][1].features;
+        this.stations = results[2] ? results[2][1].features : [];
         this.formTransect = this.initFormTransect();
         if (!this.isNew) {
           this.loadTransect();
@@ -157,7 +161,7 @@ export class TransectFormComponent implements OnInit, OnDestroy {
           'Une erreur est survenue lors de la récupération des informations sur le serveur.',
           '', { positionClass: 'toast-top-right' }
         );
-        this.router.navigate([`${this.config['SFS']['MODULE_URL']}/`]);
+        this.router.navigate([`${this.config['MFS']['MODULE_URL']}/`]);
       }
     );
   }
@@ -168,6 +172,9 @@ export class TransectFormComponent implements OnInit, OnDestroy {
     });
     this.userService.check_user_cruved('C').subscribe(ucruved => {
       this.addIsAllowed = ucruved;
+    });
+    this.userService.check_user_cruved_visit('C').subscribe(ucruved => {
+      this.addVisitIsAllowed = ucruved;
     });
   }
 
@@ -185,7 +192,7 @@ export class TransectFormComponent implements OnInit, OnDestroy {
       transect_label: [null, Validators.required],
       id_station: [null],
       id_nomenclature_plot_position: [null, Validators.required],
-      azimut: [null],
+      azimuth: [null],
     });
   }
 
@@ -206,6 +213,7 @@ export class TransectFormComponent implements OnInit, OnDestroy {
         this.storeService.setCurrentSite(this.currentSite);
         this.getSensors();
         this.getPlots();
+        this.getVisits();
         this.pachForm();
         this.dataLoaded = true;
       },
@@ -234,7 +242,7 @@ export class TransectFormComponent implements OnInit, OnDestroy {
       plot_size: this.currentSite.properties.plot_size,
       plot_shape: this.currentSite.properties.plot_shape,
       transect_label: this.currentSite.properties.transect_label,
-      azimut: this.currentSite.properties.azimut,
+      azimuth: this.currentSite.properties.azimuth,
       id_station: this.currentSite.properties.id_station,
     });
     if (this.currentSite.properties?.id_station) {
@@ -247,7 +255,7 @@ export class TransectFormComponent implements OnInit, OnDestroy {
   }
 
   backToSites() {
-    this.router.navigate([`${this.config['SFS']['MODULE_URL']}/`]);
+    this.router.navigate([`${this.config['MFS']['MODULE_URL']}/`]);
   }
 
   onAddPlot(content) {
@@ -381,7 +389,7 @@ export class TransectFormComponent implements OnInit, OnDestroy {
       this.transectApi.addTransect(transect).subscribe(
         data => {
           this.toastr.success('Le transect a été ajouté avec succès', '', { positionClass: 'toast-top-right' });
-          this.router.navigate([`${this.config['SFS']['MODULE_URL']}/transects`, (data as any).properties.id_base_site]);
+          this.router.navigate([`${this.config['MFS']['MODULE_URL']}/transects`, (data as any).properties.id_base_site]);
         },
         error => {
           this.toastr.error('Une erreur est survenue lors de la création du transect', '', { positionClass: 'toast-top-right' });
@@ -413,6 +421,54 @@ export class TransectFormComponent implements OnInit, OnDestroy {
         this.toastr.error('Une erreur est survenue lors de la récupération des capteurs', '', { positionClass: 'toast-top-right' });
       }
     );
+  }
+  getVisits() {
+  this.visitReportApi.getAllVisits(this.idSite).subscribe(
+    (data: any) => {
+      if (data) {
+        this.page.totalElements = data[0].totalItems;
+        let visits = data[1] ? data[1] : [];
+        visits.forEach(visit => {
+          if (visit && visit.observers) {
+            let fullName = '';
+            let count = visit.observers.length;
+            visit.observers.forEach((obs, index) => {
+              if (count > 1) {
+                if (index + 1 == count) {
+                  fullName += obs.nom_role + ' ' + obs.prenom_role;
+                } else {
+                  fullName += obs.nom_role + ' ' + obs.prenom_role + ', ';
+                }
+              } else {
+                fullName = obs.nom_role + ' ' + obs.prenom_role;
+              }
+            });
+            visit.observers = fullName;
+          }
+        });
+        this.rows = visits;
+      } else {
+        this.rows = [];
+      }
+    },
+    error => {
+      this.toastr.error('Erreur lors de la récupération des visites', '', { positionClass: 'toast-top-right' });
+    }
+  );
+}
+
+  onNewVisit() {
+    this.router.navigate([`${this.config['MFS']['MODULE_URL']}/transects`, this.idSite, 'new_visit']);
+  }
+
+  onVisitDetails(id_base_visit: number) {
+    this.router.navigate([`${this.config['MFS']['MODULE_URL']}/transects`, this.idSite, 'visit', id_base_visit]);
+  }
+
+  onRowSelect(event: any) {
+    if (event.type === 'click') {
+      this.onVisitDetails(event.row.id_base_visit);
+    }
   }
 
   getPlots() {
@@ -560,7 +616,13 @@ export class TransectFormComponent implements OnInit, OnDestroy {
       );
     }
   }
+  public taxonFormatter = (taxon: any) => {
+    return taxon?.nom_complet ? taxon.nom_complet : '';
+  };
 
+  addNewTaxon(event: any) {
+    this.formStation.patchValue({ cd_nom: event.item.cd_nom });
+  }
   onEditPlot(plot: any, content: any, index?: number) {
     this.plotToEdit = plot;
     this.plotToEditIndex = index;
@@ -677,6 +739,9 @@ export class TransectFormComponent implements OnInit, OnDestroy {
       this.modalRef = this.modalService.open(content, { centered: true });
     });
   }
+  addNewTaxonEdit(event: any) {
+  this.formEditStation.patchValue({ cd_nom: event.item.cd_nom });
+  }
 
   onSaveEditCurrentStation() {
     let station = this.formEditStation.value;
@@ -688,13 +753,19 @@ export class TransectFormComponent implements OnInit, OnDestroy {
         this.stationApi.getAllStations().subscribe((result: any) => {
           this.stations = result[1].features.sort((a, b) => a.properties.name.localeCompare(b.properties.name));
         });
+        this.transectApi.getOneTransect(this.idSite).subscribe(
+          (site: any) => {
+            this.currentSite = site;
+            this.storeService.setCurrentSite(this.currentSite);
+          }
+        );
         this.toastr.success('Station modifiée avec succès', '', { positionClass: 'toast-top-right' });
       },
       error => {
         this.toastr.error('Erreur lors de la modification de la station', '', { positionClass: 'toast-top-right' });
       }
     );
-  }
+}
 
   onDeleteCurrentStation(content: any) {
     this.stationToDelete = this.selectedStation;

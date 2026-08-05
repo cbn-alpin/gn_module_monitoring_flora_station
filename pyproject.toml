@@ -26,7 +26,8 @@ dynamic = ["version"]
 dependencies = [
     "pypnnomenclature",
     "pypnusershub>=1.5.9",
-    "geonature>=2.13"
+    "geonature>=2.13",
+    "gn_conservation_backend_shared>=0.5.2"
 ]
 
 [project.optional-dependencies]

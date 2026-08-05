@@ -7,7 +7,7 @@ import {
   NgbDateStruct,
 } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { FormGroup, FormBuilder, Validators, FormControl } from '@angular/forms';
 import { Page } from '../../shared/models/page.model';
 import { Transect } from '../../transect/transect.model';
 import * as L from 'leaflet';
@@ -128,6 +128,10 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
   private selectedTransectId: number = null;
   public formEditStation: FormGroup;
   private stationToEdit: any = null;
+  public taxonCodeControl = new FormControl();
+  public taxonFormatter = (taxon: any) => {
+    return taxon?.nom_complet ? taxon.nom_complet : '';
+  };
   private stationToDelete: any = null;
   private confirmModalRef: NgbModalRef;
   public columnTooltips: { [key: string]: string } = {
@@ -184,7 +188,7 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit() {
-    let moduleCode = this.config['SFS']['MODULE_CODE'].toLocaleLowerCase();
+    let moduleCode = this.config['MFS']['MODULE_CODE'].toLocaleLowerCase();
     this._map = this.mapService.getMap();
     this._deflate_features = (L as any).deflate({
       minSize: 10,
@@ -357,7 +361,7 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onInfo(id_base_site: any) {
-    this.router.navigate([`${this.config['SFS']['MODULE_URL']}/transects`, id_base_site]);
+    this.router.navigate([`${this.config['MFS']['MODULE_URL']}/transects`, id_base_site]);
   }
 
   initFilters() {
@@ -527,7 +531,7 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onNewTransect() {
-    this.router.navigate([`${this.config['SFS']['MODULE_URL']}/transects/new_transect`]);
+    this.router.navigate([`${this.config['MFS']['MODULE_URL']}/transects/new_transect`]);
   }
 
   closeFix(event, datePicker) {
@@ -602,6 +606,9 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     );
   }
+  addNewTaxonEdit(event: any) {
+  this.formEditStation.patchValue({ cd_nom: event.item.cd_nom });
+}
 
   onSaveEditStation() {
     let station = this.formEditStation.value;

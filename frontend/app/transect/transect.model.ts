@@ -18,7 +18,7 @@ export interface ISite {
     base_site_name?: string;
     date_max?: string;
     observers?: any[];
-    azimut?: number;
+    azimuth?: number;
     can_edit?: boolean;
     station_name?: string;
   };
@@ -39,6 +39,6 @@ export interface Transect {
     last_visit: string;
     plot_size: string;
     plot_shape: string;
-    azimut: number;
+    azimuth: number;
     id_nomenclature_plot_position: number;
 }

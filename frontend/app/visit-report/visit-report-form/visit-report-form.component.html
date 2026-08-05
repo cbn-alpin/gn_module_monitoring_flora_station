@@ -1,0 +1,135 @@
+<div id="cover-spin" *ngIf="spinner"></div>
+<div class="card">
+  <div class="card-body p-0">
+    <div class="card-group">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">{{ visit_name }}</h4>
+        </div>
+        <div class="card-body py-0">
+
+          <div class="pb-2 d-flex justify-content-between align-items-center">
+          <button type="button" class="btn btn-link btn-sm back-button" (click)="backToVisits()">
+              <i class="fa fa-arrow-left" aria-hidden="true"> </i>
+              Retour au transect n° {{ idSite }}
+          </button>
+        <div>
+            <button
+                *ngIf="!isNew && updateIsAllowed"
+                class="btn box-shadow"
+                [ngClass]="disabledForm ? 'btn-warning' : 'btn-secondary'"
+                (click)="onEdit()"
+            >
+                <i *ngIf="disabledForm" class="fa fa-edit" aria-hidden="true"> </i>
+                {{ edit_btn }}
+            </button>
+            <button
+                *ngIf="(!disabledForm && addIsAllowed) || (!disabledForm && updateIsAllowed)"
+                type="submit"
+                class="btn btn-success box-shadow ml-3 submit-btn"
+                [disabled]="!visitForm.valid"
+                (click)="onSubmitVisit()"
+            >
+                <i class="material-icons">save</i>
+                {{ submit_label }}
+            </button>
+        </div>
+    </div>
+
+          <form [formGroup]="visitForm">
+            <fieldset [disabled]="disabledForm">
+              <legend>
+                Transect
+              </legend>
+              <div class="form-group">
+                <label> Observateur(s) * :</label>
+                <pnx-observers
+                  [parentFormControl]="visitForm.controls.observers"
+                  [bindAllItem]="true"
+                  [codeList]="storeService.sfsConfig.user_list_code"
+                  [disabled]="disabledForm"
+                >
+                </pnx-observers>
+              </div>
+              <div class="form-group">
+                <label> Facteur(s) d'influence : </label>
+                <pnx-nomenclature
+                  [parentFormControl]="visitForm.controls.perturbations"
+                  [multiSelect]="true"
+                  keyValue="id_nomenclature"
+                  [bindAllItem]="true"
+                  keyLabel="label_default"
+                  codeNomenclatureType="TYPE_PERTURBATION"
+                >
+                </pnx-nomenclature>
+              </div>
+              <div class="form-group">
+                <label> Date de la visite * : </label>
+                <pnx-date [parentFormControl]="visitForm.controls.visit_date_min"> </pnx-date>
+              </div>
+            </fieldset>
+          </form>
+            <form>
+              <fieldset>
+                  <legend>Placettes</legend>
+                  <div class="list-plots">
+                      <ng-container *ngFor="let plot of plotHierarchy">
+                          <!-- Placette principale -->
+                          <button
+                            class="plot d-flex justify-content-between align-items-center w-100"
+                            [class.active]="isActive(plot)"
+                            (click)="onChangePlot(plot)"
+                        >
+                            <span class="plot-item"><i class="fa fa-hashtag"></i> {{ plot.code_plot }}</span>
+                            <span class="plot-item" *ngIf="plot.distance_plot">
+                                <i class="material-icons gps-icon">location_on</i> {{ plot.distance_plot }} mètres
+                            </span>
+                            <span *ngIf="plot.sub_plots?.length > 0"
+                                (click)="$event.stopPropagation(); togglePlot(plot.id_plot)">
+                                <i class="fa" [ngClass]="expandedPlots[plot.id_plot] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                            </span>
+                            <span *ngIf="!plot.sub_plots?.length"></span>
+                            <span *ngIf="plot.isModified && plot.status == true" class="badge badge-warning">Modifiée</span>
+                            <span *ngIf="plot.status == false" class="badge badge-danger">Erreur</span>
+                            <span *ngIf="plot.isEmpty" class="badge badge-secondary">Vide</span>
+                        </button>
+                          <!-- Sous-placettes -->
+                          <ng-container *ngIf="expandedPlots[plot.id_plot]">
+                              <button
+                                  *ngFor="let subPlot of plot.sub_plots"
+                                  class="plot ml-4"
+                                  [class.active]="isActive(subPlot)"
+                                  (click)="onChangePlot(subPlot)"
+                                  style="border-left: 3px solid #6c757d;"
+                              >
+                                  <i class="fa fa-level-down mr-2"></i>
+                                  <span class="plot-item"><i class="fa fa-hashtag"></i> {{ subPlot.code_plot }}</span>
+                                  <span *ngIf="subPlot.isModified && subPlot.status == true" class="badge badge-warning">Modifiée</span>
+                                  <span *ngIf="subPlot.status == false" class="badge badge-danger">Erreur</span>
+                                  <span *ngIf="subPlot.isEmpty" class="badge badge-secondary">Vide</span>
+                              </button>
+                          </ng-container>
+                      </ng-container>
+                  </div>
+              </fieldset>
+          </form>
+
+        </div>
+      </div>
+
+      <div class="card">
+        <plot-releve
+          [plot-id]="plotId"
+          [strata]="strata"
+          [substrates]="substrates"
+          [disabledForm]="disabledForm"
+          [(data)]="selectedPlot"
+          [title]="plotTitle"
+          (plotSurvey)="getPlotSurvey($event)"
+        >
+        </plot-releve>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,171 @@
+<div class="card-header">
+  <h4 class="card-title">
+    Code Placette : <span class="text-success">{{ title }}</span>
+  </h4>
+</div>
+
+<div class="card-body py-0">
+  <form [formGroup]="plotForm">
+
+    <div class="row align-items-center">
+      <div class="col-6">
+        <div class="custom-control custom-checkbox">
+          <div class="form-check" id="newExclosure">
+            <input
+              class="custom-control-input"
+              id="defaultCheck1"
+              type="checkbox"
+              [formControl]="plotForm.controls.is_exclosure"
+              (change)="onFieldChange()"
+              [attr.disabled]="disabledForm ? '' : null"
+            />
+            <label class="custom-control-label" for="defaultCheck1">
+              Placette en défens
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="custom-control custom-checkbox">
+          <div class="form-check">
+            <input
+              class="custom-control-input"
+              id="taxonPresentCheck"
+              type="checkbox"
+              [formControl]="plotForm.controls.taxon_present"
+              (change)="onFieldChange()"
+              [attr.disabled]="disabledForm ? '' : null"
+            />
+            <label class="custom-control-label" for="taxonPresentCheck">
+              Présence du taxon
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-2" *ngIf="plotForm.controls.taxon_present.value">
+      <div class="col-6">
+        <small>Tiges fleuries</small>
+        <input
+          type="number"
+          min="0"
+          class="form-control"
+          [formControl]="plotForm.controls.flowering_stems_count"
+          (blur)="onFieldChange()"
+        />
+      </div>
+      <div class="col-6">
+        <small>Tiges non fleuries</small>
+        <input
+          type="number"
+          min="0"
+          class="form-control"
+          [formControl]="plotForm.controls.non_flowering_stems_count"
+          (blur)="onFieldChange()"
+        />
+      </div>
+    </div>
+
+    <div class="mt-2">
+      <small>Remarques</small>
+      <textarea
+        class="form-control"
+        rows="2"
+        [formControl]="plotForm.controls.remarks"
+        (blur)="onFieldChange()"
+      ></textarea>
+    </div>
+    
+    <div class="form-group mt-3">
+      <label>Facteur(s) d'influence</label>
+      <pnx-nomenclature
+        [parentFormControl]="plotForm.controls.disturbances_survey"
+        [multiSelect]="true"
+        keyValue="id_nomenclature"
+        [bindAllItem]="true"
+        keyLabel="label_default"
+        codeNomenclatureType="TYPE_PERTURBATION"
+        (ngModelChange)="onFieldChange()"
+      >
+      </pnx-nomenclature>
+    </div>
+
+    <table class="table table-striped mt-3">
+      <thead class="thead-light">
+        <tr>
+          <th style="width: 70%">Strate</th>
+          <th style="width: 20%">Recouvrement</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let stratum of plotForm.controls.strata_survey['controls']"
+          formArrayName="strata_survey"
+        >
+          <ng-container *ngIf="!disabledForm || (disabledForm && stratum.controls.cover_percentage.value)">
+            <td>{{ stratum.controls.label_default.value }}</td>
+            <td>
+              <div class="input-group">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  class="form-control"
+                  [formControl]="stratum.controls.cover_percentage"
+                  (blur)="onFieldChange()"
+                />
+                <div class="input-group-append">
+                  <span class="input-group-text">%</span>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+        </tr>
+        <tr *ngIf="disabledForm && !hasStrataCovering">
+          <td class="bg-info" colspan="2">Aucun recouvrement renseigné</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="table table-striped">
+      <thead class="thead-light">
+        <tr>
+          <th style="width: 70%">Substrat</th>
+          <th style="width: 20%">Recouvrement</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let substrate of plotForm.controls.substrates_survey['controls']"
+          formArrayName="substrates_survey"
+        >
+          <ng-container *ngIf="!disabledForm || (disabledForm && substrate.controls.cover_percentage.value)">
+            <td>{{ substrate.controls.label_default.value }}</td>
+            <td>
+              <div class="input-group">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  class="form-control"
+                  [formControl]="substrate.controls.cover_percentage"
+                  (blur)="onFieldChange()"
+                />
+                <div class="input-group-append">
+                  <span class="input-group-text">%</span>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+        </tr>
+        <tr *ngIf="disabledForm && !hasSubstrateCovering">
+          <td class="bg-info" colspan="2">Aucun recouvrement renseigné</td>
+        </tr>
+      </tbody>
+    </table>
+
+    
+
+  </form>
+</div>
