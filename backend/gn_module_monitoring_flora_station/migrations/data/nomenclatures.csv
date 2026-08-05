@@ -1,0 +1,18 @@
+type_nomenclature_code,cd_nomenclature,mnemonique,label_default,definition_default,label_fr,definition_fr,cd_nomenclature_broader,hierarchy
+STRATE_PLACETTE,Rar,recArboree,Recouvrement strate arborée,Recouvrement strate arborée,Recouvrement strate arborée,Recouvrement strate arborée,0,.010
+STRATE_PLACETTE,Rst,recArbustive,Recouvrement strate arbustive,Recouvrement strate arbustive,Recouvrement strate arbustive,Recouvrement strate arbustive,0,.011
+STRATE_PLACETTE,Rhe,recHerbacee,Recouvrement strate herbacée,Recouvrement strate herbacée,Recouvrement strate herbacée,Recouvrement strate herbacée,0,.012
+STRATE_PLACETTE,Rcr,recCrypto,Recouvrement strate cryptogamique,Recouvrement strate cryptogamique,Recouvrement strate cryptogamique,Recouvrement strate cryptogamique,0,.013
+SUBSTRAT_PLACETTE,Rec,recEauCirc,Recouvrement eau circulante,Recouvrement eau circulante,Recouvrement eau circulante,Recouvrement eau circulante,0,.001
+SUBSTRAT_PLACETTE,Res,recEauStag,Recouvrement eau stagnante,Recouvrement eau stagnante,Recouvrement eau stagnante,Recouvrement eau stagnante,0,.002
+SUBSTRAT_PLACETTE,Rsn,recSolNu,Recouvrement sol nu,Recouvrement sol nu,Recouvrement sol nu,Recouvrement sol nu,0,.003
+SUBSTRAT_PLACETTE,Rro,recRochers,Recouvrement rochers,Recouvrement rochers,Recouvrement rochers,Recouvrement rochers,0,.004
+SUBSTRAT_PLACETTE,Rbl,recBloc,Recouvrement blocs,Recouvrement blocs > 20 cm,Recouvrement blocs,Recouvrement blocs > 20 cm,0,.005
+SUBSTRAT_PLACETTE,Rca,recCaillou,Recouvrement cailloux,Recouvrement cailloux 2-20 cm,Recouvrement cailloux,Recouvrement cailloux 2-20 cm,0,.006
+SUBSTRAT_PLACETTE,Rgr,recGravier,Recouvrement graviers,Recouvrement graviers 2mm-2cm,Recouvrement graviers,Recouvrement graviers 2mm-2cm,0,.007
+SUBSTRAT_PLACETTE,Rsf,recSedimentFin,Recouvrement sédiments fins,Recouvrement sédiments fins < 2mm,Recouvrement sédiments fins,Recouvrement sédiments fins < 2mm,0,.008
+SUBSTRAT_PLACETTE,Rsa,recSubstratArtif,Recouvrement substrat artificiel,Recouvrement substrat artificiel,Recouvrement substrat artificiel,Recouvrement substrat artificiel,0,.009
+SUBSTRAT_PLACETTE,Rlh,recLitiereHumus,Recouvrement litière-humus,Recouvrement litière-humus,Recouvrement litière-humus,Recouvrement litière-humus,0,.010
+SUBSTRAT_PLACETTE,Rto,recTourbe,Recouvrement tourbe,Recouvrement tourbe,Recouvrement tourbe,Recouvrement tourbe,0,.011
+SUBSTRAT_PLACETTE,Rtu,recTuf,Recouvrement tuf,Recouvrement tuf,Recouvrement tuf,Recouvrement tuf,0,.012
+TYPE_PERTURBATION,Dej,perDejection,Déjections,Présence de déjections animales,Déjections,Présence de déjections animales,0,.065
