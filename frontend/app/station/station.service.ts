@@ -64,9 +64,16 @@ export class StationService {
     );
   }
 
+  getStationsTaxa() {
+  return this._http.get(
+    `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/stations/taxa`
+  );
+  }
+
   getOrganism() {
     return this._http.get(
       `${this.config.API_ENDPOINT}${this.config['MFS']['MODULE_URL']}/stations/organism`
     );
   }
+  
 }

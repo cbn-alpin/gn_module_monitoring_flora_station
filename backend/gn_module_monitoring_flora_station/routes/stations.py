@@ -126,3 +126,9 @@ def delete_station(id_station):
     except Exception as e:
         DB.session.rollback()
         return {"error": str(e)}, 500
+
+@blueprint.route("/stations/taxa", methods=["GET"])
+@permissions.check_cruved_scope("R", module_code=MODULE_CODE)
+@json_resp
+def get_taxa():
+    return station_service.get_taxa()

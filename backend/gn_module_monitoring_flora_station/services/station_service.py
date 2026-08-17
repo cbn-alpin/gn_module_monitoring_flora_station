@@ -84,3 +84,9 @@ class StationService:
     def get_organisms(self):
         data = self.station_repo.get_organisms()
         return [row[0] for row in data if row[0] is not None]
+    
+    def get_taxa(self):
+        data = self.station_repo.get_distinct_taxa()
+        return [{"cd_nom": row[0], "lb_nom": row[1]} for row in data]
+
+    

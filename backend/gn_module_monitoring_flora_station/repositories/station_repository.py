@@ -6,6 +6,7 @@ from geonature.core.gn_monitoring.models import corVisitObserver, TBaseVisits
 from ref_geo.models import LAreas
 from pypnusershub.db.models import User, Organisme
 from apptax.taxonomie.models import Taxref
+ 
 
 from ..models import MfsStation, MfsTransect
 
@@ -122,5 +123,14 @@ class StationRepository:
             .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
             .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
             .distinct()
+        )
+        return DB.session.execute(q).all()
+    
+    def get_distinct_taxa(self):
+       
+        q = (
+            select(distinct(MfsStation.cd_nom), Taxref.lb_nom)
+            .join(Taxref, MfsStation.cd_nom == Taxref.cd_nom)
+            .order_by(Taxref.lb_nom)
         )
         return DB.session.execute(q).all()
