@@ -22,13 +22,15 @@ import { StationService } from '../station.service';
 import { TransectService } from '../../transect/transect.service';
 import { StoreService } from '../../shared/services/store.service';
 import { UserService } from '../../core/services/user.service';
+import { TaxonService } from '../../core/services/taxon.service';
 import * as _ from 'lodash';
-import { Station } from '../station.model';
+
 
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
+
 
 const I18N_VALUES = {
   fr: {
@@ -117,10 +119,7 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
   public tabYear = [];
   public tabArea = [];
   public tabOrganism = [];
-  // TODO: à valider avec le manager — liste des taxons pour le select provisoire
-  // de la modale d'édition (cd_nom référence taxonomie.taxref, potentiellement
-  // des dizaines de milliers d'entrées ; un composant de recherche/autocomplete
-  // sera probablement nécessaire à la place d'un simple select)
+  public tabTaxon=[];
   public taxons: any[] = [];
   private transectLayers: L.Layer[] = [];
   private selectedTransectLayer: L.Polyline = null;
@@ -157,6 +156,7 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
     datePickerConfig: NgbDatepickerConfig,
     public storeService: StoreService,
     public mapListService: MapListService,
+    public taxonService: TaxonService,
     public router: Router,
     private toastr: ToastrService,
     private formBuilder: FormBuilder,
@@ -264,6 +264,11 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.tabOrganism = data;
       }
     );
+    this._stationApi.getStationsTaxa().subscribe(
+      (data: any[]) => {
+        this.tabTaxon = data;
+      }
+    );
   }
 
   checkPermission() {
@@ -277,6 +282,10 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
     this._stationApi.getAllStations(params).subscribe(
       data => {
         if (data !== null) {
+          if (this._deflate_features) {
+            this._deflate_features.clearLayers();
+          }
+          this.mapListService.layerDict = {};
           this.sites = data[1];
           this.page.totalElements = data[0].totalItems;
           if (this.storeService.sfsConfig.pagination_serverside) {
@@ -302,6 +311,10 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
           this.dataSource.data = this.filteredData;
           this.page.totalElements = data[0].totalItems;
         } else {
+          if (this._deflate_features) {
+            this._deflate_features.clearLayers();
+          }
+          this.mapListService.layerDict = {};
           this.filteredData = [];
           this.dataSource.data = [];
         }
@@ -321,7 +334,7 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.dataLoaded = true;
       }
     );
-  }
+}
 
   onViewStation(id_station: number) {
     this.transectLayers.forEach(layer => this._map.removeLayer(layer));
@@ -368,7 +381,9 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.filterForm = this.formBuilder.group({
       date_low: null,
       date_up: null,
-      filterTaxon: this.storeService.queryString.get('filterTaxon'),
+      filterTaxon: this.storeService.queryString.get('filterTaxon')
+        ? Number(this.storeService.queryString.get('filterTaxon'))
+        : null,
       year: this.storeService.queryString.get('year'),
       area_name: this.storeService.queryString.get('area_name'),
       organism: this.storeService.queryString.get('organism'),
@@ -508,6 +523,7 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
     filter.year = this.filterForm.value.year;
     filter.area_name = this.filterForm.value.area_name;
     filter.organism = this.filterForm.value.organism;
+    filter.filterTaxon = this.filterForm.value.filterTaxon;
     Object.keys(filter).forEach(key => {
       if (filter[key]) {
         this.storeService.queryString = this.storeService.queryString.set(key, filter[key]);
@@ -594,21 +610,26 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onEditStation(station: any, content: any) {
-    this.stationToEdit = station;
-    this._stationApi.getOneStation(station.id_station).subscribe(
-      (data: any) => {
-        this.formEditStation = this.formBuilder.group({
-          name: [data.properties.name, Validators.required],
-          remarks: [data.properties.remarks],
-          cd_nom: [data.properties.cd_nom, Validators.required],
-        });
-        this.modalRef = this.modalService.open(content, { centered: true });
-      }
-    );
+      this.stationToEdit = station;
+      this._stationApi.getOneStation(station.id_station).subscribe(
+        (data: any) => {
+          this.formEditStation = this.formBuilder.group({
+            name: [data.properties.name, Validators.required],
+            remarks: [data.properties.remarks],
+            cd_nom: [data.properties.cd_nom, Validators.required],
+          });
+          this.taxonCodeControl.setValue({
+            cd_nom: data.properties.cd_nom,
+            nom_complet: data.properties.taxon_name,
+            nom_complet_html: data.properties.taxon_name,
+          });
+          this.modalRef = this.modalService.open(content, { centered: true });
+        }
+      );
   }
   addNewTaxonEdit(event: any) {
-  this.formEditStation.patchValue({ cd_nom: event.item.cd_nom });
-}
+    this.formEditStation.patchValue({ cd_nom: event.item.cd_nom });
+  }
 
   onSaveEditStation() {
     let station = this.formEditStation.value;

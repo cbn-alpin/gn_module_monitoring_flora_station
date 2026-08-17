@@ -736,6 +736,11 @@ export class TransectFormComponent implements OnInit, OnDestroy {
         remarks: [data.properties.remarks],
         cd_nom: [data.properties.cd_nom, Validators.required],
       });
+      this.taxonCodeControl.setValue({
+        cd_nom: data.properties.cd_nom,
+        nom_complet: data.properties.taxon_name,
+        nom_complet_html: data.properties.taxon_name,
+      });
       this.modalRef = this.modalService.open(content, { centered: true });
     });
   }

@@ -2,6 +2,17 @@
   <div class="card col-xs-12 col-sm-12 col-md-6 col-lg-6 padding-sm tab-container list-shs">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h4 class="card-title">Liste des stations</h4>
+      <pnx-modal-download
+        *ngIf="filteredData.length > 0"
+        labelButton="Télécharger les visites"
+        [pathDownload]="storeService.urlLoad"
+        [exportFormat]="storeService.sfsConfig.export_available_format"
+        [queryString]="storeService.queryString"
+    >
+    </pnx-modal-download>
+    <button *ngIf="filteredData.length === 0" class="btn btn-sm btn-secondary" disabled matTooltip="Aucune visite à télécharger">
+        Télécharger les visites
+    </button>
       <button class="btn btn-sm btn-success pull-right box-shadow" (click)="onNewTransect()" *ngIf="addIsAllowed">
         <i class="fa fa-plus-circle" aria-hidden="true"> </i>
         Ajouter un nouveau transect
@@ -44,6 +55,17 @@
                 <option [ngValue]="null"> -- Sélectionnez un filtre -- </option>
                 <option *ngFor="let area of tabArea" [ngValue]="area" [innerHTML]="area"></option>
               </select>
+            </div>
+            <div class="searchSite col">
+              <div class="form-row">
+                <div class="searchSite col">
+                  <small> Taxon : </small>
+                  <select class="form-control form-control-sm" name="selectTaxon" [formControl]="filterForm.controls.filterTaxon">
+                    <option [ngValue]="null"> -- Sélectionnez un filtre -- </option>
+                    <option *ngFor="let taxon of tabTaxon" [ngValue]="taxon.cd_nom" [innerHTML]="taxon.lb_nom"></option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
           <button mat-stroked-button color="primary" (click)="resetFilters()" class="pull-right">
@@ -163,19 +185,20 @@
                 </textarea>
             </div>
             <div class="form-group">
-                <!-- TODO: à valider avec le manager — select classique provisoire,
-                     cd_nom référence taxonomie.taxref (dizaines de milliers de taxons),
-                     un vrai composant de recherche/autocomplete sera probablement nécessaire -->
-                <small>Taxon * :</small>
-                <select class="form-control form-control-sm"
-                        [formControl]="formEditStation.controls.cd_nom">
-                    <option [ngValue]="null">-- Sélectionnez un taxon --</option>
-                    <option *ngFor="let taxon of taxons"
-                            [ngValue]="taxon.cd_nom">
-                        {{ taxon.nom_complet }}
-                    </option>
-                </select>
-            </div>
+              <small>Taxon * :</small>
+              <pnx-autocomplete
+                  [parentFormControl]="taxonCodeControl"
+                  [charNumber]="3"
+                  [listLength]="50"
+                  [apiEndPoint]="taxonService.searchApiEndPoint"
+                  keyValue="nom_complet_html"
+                  [formatter]="taxonFormatter"
+                  (onChange)="addNewTaxonEdit($event)"
+                  [othersGetParams]="{'fields': 'nom_complet,nom_complet_html,cd_nom'}"
+                  [searchAsParameter]="'true'"
+              >
+              </pnx-autocomplete>
+          </div>
         </form>
     </div>
     <div class="modal-footer">

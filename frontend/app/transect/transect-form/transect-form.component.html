@@ -25,7 +25,7 @@
             Enregister
           </button>
           <button
-            *ngIf="!isNew && upIsAllowed"
+            *ngIf="!isNew && currentSite?.properties?.can_edit"
             class="btn btn-sm pull-right box-shadow"
             [ngClass]="disabledForm ? 'btn-warning' : 'btn-secondary'"
             (click)="onEdit()"
