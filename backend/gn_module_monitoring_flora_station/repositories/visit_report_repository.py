@@ -6,6 +6,8 @@ from geonature.core.gn_commons.models import TModules
 from geonature.core.gn_monitoring.models import TBaseVisits
 from pypnusershub.db.models import User
 from geonature.utils.env import DB
+from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
+from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
 
 from ..models import (
     MfsPlotSurvey,
@@ -166,17 +168,14 @@ class VisitReportRepository:
         return DB.session.scalars(query).all()
 
     def get_strate_list_for_export(self):
-        from sqlalchemy import select
-        from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
-
+       
         query = select(TNomenclatures.label_default).join(
             BibNomenclaturesTypes, BibNomenclaturesTypes.id_type == TNomenclatures.id_type
         ).where(BibNomenclaturesTypes.mnemonique == "STRATE_PLACETTE")
         return [row[0] for row in DB.session.execute(query).all()]
 
     def get_substrate_list_for_export(self):
-        from sqlalchemy import select
-        from pypnnomenclature.models import TNomenclatures, BibNomenclaturesTypes
+        
 
         query = select(TNomenclatures.label_default).join(
             BibNomenclaturesTypes, BibNomenclaturesTypes.id_type == TNomenclatures.id_type

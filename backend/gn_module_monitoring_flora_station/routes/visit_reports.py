@@ -1,24 +1,28 @@
-from flask import request, send_from_directory
+from flask import request, send_from_directory, g
 from werkzeug.exceptions import NotFound
 
 from geonature.utils.env import DB, ROOT_DIR
 from geonature.core.gn_permissions import decorators as permissions
 from utils_flask_sqla.response import json_resp
 from utils_flask_sqla_geo.utilsgeometry import FionaShapeService
+from pypnusershub.db.tools import InsufficientRightsError
+from geojson import FeatureCollection
+from geoalchemy2.shape import to_shape
+from utils_flask_sqla.response import to_csv_resp, to_json_resp
 
 from ..blueprint import blueprint
 from ..services.visit_report_service import VisitReportService
 from ..services.export_service import ExportService
+from ..services.permission_service import PermissionService
 from ..models import ExportVisits
 from gn_module_monitoring_flora_station import MODULE_CODE, METADATA_CODE
 import os
 import datetime
 
-from geojson import FeatureCollection
-from geoalchemy2.shape import to_shape
-from utils_flask_sqla.response import to_csv_resp, to_json_resp
 
 
+
+permission_service = PermissionService()
 
 export_service = ExportService()
 
@@ -55,20 +59,26 @@ def add_visit(scope):
 
 
 @blueprint.route("/visits/<id_visit>", methods=["PATCH"])
-@permissions.check_cruved_scope("U", module_code=MODULE_CODE)
+@permissions.check_cruved_scope("U", get_scope=True, module_code=MODULE_CODE)
 @json_resp
-def update_visit(id_visit):
+def update_visit(id_visit, scope):
     data = dict(request.get_json())
     try:
+        existing_visit = visit_report_service.visit_report_repo.get_visit_by_id(id_visit)
+        if existing_visit is None:
+            raise NotFound(f"Visit {id_visit} does not exist")
+        permission_service.check_user_cruved_visit(g.current_user, existing_visit, str(scope))
+
         visit = visit_report_service.update_visit(id_visit, data)
         DB.session.commit()
         return visit.as_dict()
     except NotFound:
         raise
+    except InsufficientRightsError as e:
+        return {"error": str(e)}, 403
     except Exception as e:
         DB.session.rollback()
         return {"error": str(e)}, 500
-
 
 @blueprint.route("/visits/export", methods=["GET"])
 @permissions.check_cruved_scope("E", module_code=MODULE_CODE)

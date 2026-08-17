@@ -1,17 +1,21 @@
-from flask import request
+from flask import request,g
 from geojson import FeatureCollection
 from sqlalchemy import select, func
 
 from geonature.utils.env import DB
 from geonature.core.gn_permissions import decorators as permissions
 from utils_flask_sqla.response import json_resp
+from pypnusershub.db.tools import InsufficientRightsError
+from pypnusershub.db.models import User
 
 from ..blueprint import blueprint
 from ..services.transect_service import TransectService
 from gn_module_monitoring_flora_station import MODULE_CODE
+from ..services.permission_service import PermissionService
 from .plots import create_plot
 
 transect_service = TransectService()
+permission_service = PermissionService()
 
 
 @blueprint.route("/sites", methods=["GET"])
@@ -113,15 +117,26 @@ def add_transect(scope):
 def update_transect(id_transect, scope):
     data = dict(request.get_json())
     try:
+        existing_transect = transect_service.get_transect(id_transect)
+        if existing_transect is None:
+            return {"error": f"Transect {id_transect} does not exist"}, 404
+
+        digitiser = None
+        if existing_transect.t_base_site and existing_transect.t_base_site.id_digitiser:
+            digitiser = DB.session.get(User, existing_transect.t_base_site.id_digitiser)
+
+        permission_service.check_user_cruved_transect(g.current_user, existing_transect, str(scope), digitiser)
+
         id_base_site = transect_service.update_transect_with_site(data, data.pop("cor_plots", []), create_plot)
         DB.session.commit()
         return transect_service.build_transect_feature(
             id_base_site, blueprint.config["municipality_type_code"], MODULE_CODE
         )
+    except InsufficientRightsError as e:
+        return {"error": str(e)}, 403
     except Exception as e:
         DB.session.rollback()
         return {"error": str(e)}, 500
-
 
 @blueprint.route("/transects/<id_transect>", methods=["DELETE"])
 @permissions.check_cruved_scope("D", module_code=MODULE_CODE)
