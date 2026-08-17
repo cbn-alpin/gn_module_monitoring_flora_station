@@ -170,6 +170,7 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
       (data: any) => {
         this.visit = data;
         this.userService.check_user_cruved_visit('U', this.visit).subscribe(ucruved => {
+          console.log('DEBUG ucruved:', ucruved, 'visit.id_organisme:', this.visit['id_organisme'], 'visit.observers:', this.visit['observers']);
           this.updateIsAllowed = ucruved;
         });
         this.visit.perturbations = null;

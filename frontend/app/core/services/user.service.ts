@@ -6,18 +6,23 @@ import { ConfigService } from '@geonature/services/config.service';
 
 @Injectable()
 export class UserService {
-  public currentUser;
+
+   get currentUser() {
+    return this.getUser();
+  }
+
+
   private _cruved = {};
 
   constructor(
     private _http: HttpClient,
     private config: ConfigService,
   ) {
-    this.currentUser = this.getUser();
+    
   }
-
+   
   getUser() {
-    let currentUser = localStorage.getItem('current_user');
+    let currentUser = localStorage.getItem('gn_current_user');
     return JSON.parse(currentUser);
   }
 
@@ -36,7 +41,7 @@ export class UserService {
     }
   }
 
-  // id_digitaliser ?
+ 
   check_user_cruved_visit(action, visit?): Observable<any> {
     let isAllowed = false;
     return new Observable(observer => {
@@ -68,7 +73,7 @@ export class UserService {
             }
           }
 
-          if (user_cruved_level == '3' || user_cruved_level == '2') {
+          if (user_cruved_level == '3') {
             isAllowed = true;
           }
 
