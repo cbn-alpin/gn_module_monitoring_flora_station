@@ -8,7 +8,7 @@
   <form [formGroup]="plotForm">
 
     <div class="row align-items-center">
-      <div class="col-6">
+      <div class="col-6" *ngIf="!isSubPlot">
         <div class="custom-control custom-checkbox">
           <div class="form-check" id="newExclosure">
             <input
