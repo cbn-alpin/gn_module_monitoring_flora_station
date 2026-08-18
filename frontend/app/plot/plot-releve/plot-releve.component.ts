@@ -1,5 +1,6 @@
-import { Component, OnInit, Output, Input, EventEmitter, OnChanges } from '@angular/core';
+import { Component, OnInit, Output, Input, EventEmitter, OnChanges, OnDestroy } from '@angular/core';
 import { FormGroup, FormBuilder, FormArray, Validators } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import * as _ from 'lodash';
 
 @Component({
@@ -7,19 +8,21 @@ import * as _ from 'lodash';
   templateUrl: 'plot-releve.component.html',
   styleUrls: ['./plot-releve.component.scss'],
 })
-export class PlotReleveComponent implements OnInit, OnChanges {
+export class PlotReleveComponent implements OnInit, OnChanges,OnDestroy {
   @Input() strata: any[];
   @Input() substrates: any[];
   @Input('plot-id') plotId: number;
   @Input() data: any = null;
   @Input() disabledForm;
   @Input() title: string;
+  @Input() isSubPlot: boolean = false;
   @Output() plotSurvey = new EventEmitter();
   private isModified: boolean = false;
   private plotSurveyId: number;
   plotForm: FormGroup;
   hasStrataCovering: boolean;
   hasSubstrateCovering: boolean;
+  private valueChangesSubscription: Subscription;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -93,14 +96,18 @@ export class PlotReleveComponent implements OnInit, OnChanges {
     });
   }
 
-  private patchForm() {
+ private patchForm() {
+    const disturbances = (this.data.disturbances_survey || [])
+      .map(d => d.t_nomenclature || d)
+      .filter(Boolean);
+
     this.plotForm.patchValue({
       is_exclosure: this.data.is_exclosure,
       taxon_present: this.data.taxon_present,
       remarks: this.data.remarks,
       flowering_stems_count: this.data.flowering_stems_count,
       non_flowering_stems_count: this.data.non_flowering_stems_count,
-      disturbances_survey: (this.data.disturbances_survey || []).map(d => d.t_nomenclature),
+      disturbances_survey: disturbances,
     });
 
     for (const item of this.data.strata_survey || []) {
@@ -132,13 +139,18 @@ export class PlotReleveComponent implements OnInit, OnChanges {
         }
       }
     }
-  }
+}
 
   private onChanges(): void {
-    this.plotForm.valueChanges.subscribe(val => {
+    if (this.valueChangesSubscription) {
+      this.valueChangesSubscription.unsubscribe();
+    }
+    this.valueChangesSubscription = this.plotForm.valueChanges.subscribe(val => {
       this.isModified = true;
     });
-  }
+}
+
+
 
   onFieldChange() {
     const formValue = _.cloneDeep(this.plotForm.value);
@@ -153,10 +165,6 @@ export class PlotReleveComponent implements OnInit, OnChanges {
       return substrate;
     });
 
-    formValue.disturbances_survey = (formValue.disturbances_survey || []).map(item => ({
-      id_nomenclature_disturbance: item.id_nomenclature,
-    }));
-
     const payload: any = {
       id_plot: this.plotId,
       ...formValue,
@@ -168,5 +176,11 @@ export class PlotReleveComponent implements OnInit, OnChanges {
 
     this.plotSurvey.emit([payload, this.isModified]);
     this.isModified = false;
-  }
+}
+ngOnDestroy() {
+    if (this.valueChangesSubscription) {
+      this.valueChangesSubscription.unsubscribe();
+    }
+}
+
 }

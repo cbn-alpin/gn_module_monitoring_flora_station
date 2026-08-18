@@ -1,7 +1,16 @@
 from flask import g
 from werkzeug.exceptions import NotFound, BadRequest
+from geonature.utils.env import DB
 
 from ..repositories.visit_report_repository import VisitReportRepository
+from ..models import (
+            MfsPlotSurvey,
+            MfsVisit,
+            MfsVisitDisturbance,
+            MfsPlotSurveyStratum,
+            MfsPlotSurveySubstrate,
+            MfsPlotSurveyDisturbance,
+        )
 
 
 class PostYearError(BadRequest):
@@ -38,7 +47,7 @@ class VisitReportService:
                 )
 
     def list_visits_by_site(self, id_site, items_per_page):
-        from geonature.utils.env import DB
+        
 
         query = self.visit_report_repo.get_visits_by_site_query(id_site)
         total_items = self.visit_report_repo.count(query)
@@ -76,14 +85,7 @@ class VisitReportService:
         return visit
 
     def create_visit(self, data, module_code, metadata_code):
-        from ..models import (
-            MfsPlotSurvey,
-            MfsVisit,
-            MfsVisitDisturbance,
-            MfsPlotSurveyStratum,
-            MfsPlotSurveySubstrate,
-            MfsPlotSurveyDisturbance,
-        )
+      
 
         self.check_year_visit(data["id_base_site"], data["visit_date_min"])
 
@@ -135,14 +137,7 @@ class VisitReportService:
         return self.visit_report_repo.save_visit(visit)
 
     def update_visit(self, id_visit, data):
-        from ..models import (
-            MfsPlotSurvey,
-            MfsVisit,
-            MfsVisitDisturbance,
-            MfsPlotSurveyStratum,
-            MfsPlotSurveySubstrate,
-            MfsPlotSurveyDisturbance,
-        )
+        
 
         existing_visit = self.visit_report_repo.get_visit_by_id(id_visit)
         if existing_visit is None:

@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewChecked } from '@angular/core';
+import { Component, OnInit, AfterViewChecked,ViewChild } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -18,6 +18,7 @@ import { StoreService } from '../../shared/services/store.service';
 import { UserService } from '../../core/services/user.service';
 import { IVisit, PlotSurvey } from '../visit-report.model';
 import { ISite } from '../../transect/transect.model';
+import { PlotReleveComponent } from '../../plot/plot-releve/plot-releve.component';
 
 @Component({
   selector: 'visit-report-form',
@@ -49,6 +50,8 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
   public addIsAllowed: boolean = false;
   public plotHierarchy = [];
   public expandedPlots: { [key: number]: boolean } = {};
+  @ViewChild(PlotReleveComponent) plotReleveComponent!: PlotReleveComponent;
+  public isSubPlot: boolean = false;
 
   constructor(
     private config: ConfigService,
@@ -170,7 +173,6 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
       (data: any) => {
         this.visit = data;
         this.userService.check_user_cruved_visit('U', this.visit).subscribe(ucruved => {
-          console.log('DEBUG ucruved:', ucruved, 'visit.id_organisme:', this.visit['id_organisme'], 'visit.observers:', this.visit['observers']);
           this.updateIsAllowed = ucruved;
         });
         this.visit.perturbations = null;
@@ -235,6 +237,10 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
   }
 
   onChangePlot(plot) {
+    if (this.plotReleveComponent) {
+      this.plotReleveComponent.onFieldChange();
+    }
+
     this.spinner = true;
     this.plotId = plot.id_plot;
     this.plotTitle = this.currentSite.properties.cor_plots.find(p => {
@@ -246,7 +252,7 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
     setTimeout(() => {
       this.spinner = false;
     }, 300);
-  }
+}
 
   isActive(plot) {
     return this.plotId === plot.id_plot;
@@ -263,7 +269,11 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
     this.visitForm.controls['plots'].statusChanges.subscribe(status => {});
   }
 
-  onSubmitVisit() {
+onSubmitVisit() {
+    if (this.plotReleveComponent) {
+      this.plotReleveComponent.onFieldChange();
+    }
+
     if (this.visitForm.valid) {
       let preparedData: any = {};
       preparedData['id_base_visit'] = this.visitForm.value['id_base_visit'];
@@ -283,39 +293,37 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
       );
       preparedData['id_base_site'] = this.id_base_site;
 
-      this.plots.map((plot: any) => {
-        delete plot.status;
-        delete plot.isEmpty;
-        delete plot.isModified;
+      const plotsPayload = this.plots.map((plot: any) => {
+        const preparedPlot = _.cloneDeep(plot);
+        delete preparedPlot.status;
+        delete preparedPlot.isEmpty;
+        delete preparedPlot.isModified;
 
-        if (plot.strata_survey) {
-          plot.strata_survey = plot.strata_survey.map(stratum => {
+        if (preparedPlot.strata_survey) {
+          preparedPlot.strata_survey = preparedPlot.strata_survey.map(stratum => {
             const { label_default, ...rest } = stratum;
             return rest;
           });
         }
-        if (plot.substrates_survey) {
-          plot.substrates_survey = plot.substrates_survey.map(substrate => {
+        if (preparedPlot.substrates_survey) {
+          preparedPlot.substrates_survey = preparedPlot.substrates_survey.map(substrate => {
             const { label_default, ...rest } = substrate;
             return rest;
           });
         }
-        if (plot.disturbances_survey) {
-          plot.disturbances_survey = plot.disturbances_survey.map(disturbance => {
-            if (!disturbance.hasOwnProperty('id_nomenclature_disturbance')) {
-              return { id_nomenclature_disturbance: disturbance.id_nomenclature };
-            } else {
-              return { id_nomenclature_disturbance: disturbance.id_nomenclature_disturbance };
-            }
-          });
+        if (preparedPlot.disturbances_survey) {
+          preparedPlot.disturbances_survey = preparedPlot.disturbances_survey.map(disturbance => ({
+            id_nomenclature_disturbance:
+              disturbance.id_nomenclature_disturbance ?? disturbance.id_nomenclature,
+          }));
         }
+        return preparedPlot;
       });
 
-      preparedData['plots'] = this.plots;
+      preparedData['plots'] = plotsPayload;
       this.sendFormData(preparedData);
     }
 }
-
   private sendFormData(preparedData) {
     if (this.isNew) {
       this._api.addVisit(preparedData).subscribe(
