@@ -160,18 +160,46 @@ class VisitReportService:
             substrates = plot_survey_data.pop("substrates_survey", [])
             disturbances_survey = plot_survey_data.pop("disturbances_survey", [])
 
-            plot_survey = MfsPlotSurvey(**plot_survey_data)
+            id_plot_survey = plot_survey_data.get("id_plot_survey")
+            if id_plot_survey:
+                plot_survey = DB.session.get(MfsPlotSurvey, id_plot_survey)
+                for key, value in plot_survey_data.items():
+                    setattr(plot_survey, key, value)
+            else:
+                plot_survey = MfsPlotSurvey(**plot_survey_data)
 
             for stratum in strata:
-                if stratum.get("cover_percentage"):
-                    plot_survey.cor_releve_strats.append(MfsPlotSurveyStratum(**stratum))
-                elif "id_plot_survey_stratum" in stratum:
+                if stratum.get("cover_percentage") is not None:
+                    existing_id = stratum.get("id_plot_survey_stratum")
+                    if existing_id:
+                        existing_stratum = next(
+                            (s for s in plot_survey.cor_releve_strats if s.id_plot_survey_stratum == existing_id),
+                            None,
+                        )
+                        if existing_stratum:
+                            existing_stratum.cover_percentage = stratum["cover_percentage"]
+                        else:
+                            plot_survey.cor_releve_strats.append(MfsPlotSurveyStratum(**stratum))
+                    else:
+                        plot_survey.cor_releve_strats.append(MfsPlotSurveyStratum(**stratum))
+                elif "id_plot_survey_stratum" in stratum and stratum["id_plot_survey_stratum"]:
                     self.visit_report_repo.delete_stratum(stratum["id_plot_survey_stratum"])
 
             for substrate in substrates:
-                if substrate.get("cover_percentage"):
-                    plot_survey.cor_releve_substrats.append(MfsPlotSurveySubstrate(**substrate))
-                elif "id_plot_survey_substrate" in substrate:
+                if substrate.get("cover_percentage") is not None:
+                    existing_id = substrate.get("id_plot_survey_substrate")
+                    if existing_id:
+                        existing_substrate = next(
+                            (s for s in plot_survey.cor_releve_substrats if s.id_plot_survey_substrate == existing_id),
+                            None,
+                        )
+                        if existing_substrate:
+                            existing_substrate.cover_percentage = substrate["cover_percentage"]
+                        else:
+                            plot_survey.cor_releve_substrats.append(MfsPlotSurveySubstrate(**substrate))
+                    else:
+                        plot_survey.cor_releve_substrats.append(MfsPlotSurveySubstrate(**substrate))
+                elif "id_plot_survey_substrate" in substrate and substrate["id_plot_survey_substrate"]:
                     self.visit_report_repo.delete_substrate(
                         substrate["id_plot_survey_substrate"]
                     )
@@ -182,7 +210,8 @@ class VisitReportService:
             for disturbance in disturbances_survey:
                 plot_survey.cor_releve_perturbations.append(MfsPlotSurveyDisturbance(**disturbance))
 
-            visit.cor_releve_plot.append(plot_survey)
+            if not id_plot_survey:
+                visit.cor_releve_plot.append(plot_survey)
 
         self.visit_report_repo.delete_visit_disturbances(id_visit)
         for disturbance in disturbances:
