@@ -171,7 +171,7 @@ class VisitReportRepository:
        
         query = select(TNomenclatures.label_default).join(
             BibNomenclaturesTypes, BibNomenclaturesTypes.id_type == TNomenclatures.id_type
-        ).where(BibNomenclaturesTypes.mnemonique == "STRATE_PLACETTE")
+        ).where(BibNomenclaturesTypes.mnemonique == "STRATE_VEGETATION_MFS")
         return [row[0] for row in DB.session.execute(query).all()]
 
     def get_substrate_list_for_export(self):

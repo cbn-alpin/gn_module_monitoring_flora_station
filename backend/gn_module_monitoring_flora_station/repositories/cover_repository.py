@@ -28,7 +28,7 @@ class CoverRepository:
     def get_stratum_list(self):
         query = select(TNomenclatures.label_default).join(
             BibNomenclaturesTypes, BibNomenclaturesTypes.id_type == TNomenclatures.id_type
-        ).where(BibNomenclaturesTypes.mnemonique == "STRATE_PLACETTE")
+        ).where(BibNomenclaturesTypes.mnemonique == "STRATE_VEGETATION_MFS")
         return DB.session.execute(query).all()
 
     # Substrats

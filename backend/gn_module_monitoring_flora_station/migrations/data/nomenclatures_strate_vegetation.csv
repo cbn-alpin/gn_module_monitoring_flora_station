@@ -1,0 +1,8 @@
+type_nomenclature_code,cd_nomenclature,mnemonique,label_default,definition_default,label_fr,definition_fr,cd_nomenclature_broader,hierarchy
+STRATE_VEGETATION_MFS,Var,strArboree,Arborée,Strate arborée,Arborée,Strate arborée,0,.001
+STRATE_VEGETATION_MFS,Vst,strArbustive,Arbustive,Strate arbustive,Arbustive,Strate arbustive,0,.002
+STRATE_VEGETATION_MFS,Vhe,strHerbacee,Herbacée,Strate herbacée,Herbacée,Strate herbacée,0,.003
+STRATE_VEGETATION_MFS,Vcr,strCrypto,Cryptogamique,Strate cryptogamique,Cryptogamique,Strate cryptogamique,0,.004
+STRATE_VEGETATION_MFS,Vbr,strBryophytes,Bryophytes,Strate bryophytes,Bryophytes,Strate bryophytes,0,.005
+STRATE_VEGETATION_MFS,Vli,strLichens,Lichens,Strate lichens,Lichens,Strate lichens,0,.006
+STRATE_VEGETATION_MFS,Vvt,strVegTotale,Végétation totale,Végétation totale,Végétation totale,Végétation totale,0,.007
