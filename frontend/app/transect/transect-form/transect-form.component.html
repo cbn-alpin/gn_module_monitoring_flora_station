@@ -204,7 +204,7 @@
                   class="form-control form-control-sm"
                   [formControl]="formTransect.controls.base_site_description"
                   rows="4"
-                  placeholder="Indiquer l'azimut et des informations permettant de localiser le transect sur le terrain."
+                  placeholder="Indiquer les informations permettant de localiser le transect sur le terrain."
                 ></textarea>
               </div>
             </div>
@@ -470,7 +470,7 @@
     <form [formGroup]="formPlot">
       <div class="form-group">
         <small>Code placette parente (optionnel) :</small>
-        <select class="form-control form-control-sm" [formControl]="formPlot.controls.id_parent">
+        <select class="form-control form-control-sm" tabindex="6" [formControl]="formPlot.controls.id_parent">
           <option [ngValue]="null">-- Aucune (placette principale) --</option>
           <option *ngFor="let plot of getFlatPlots(plotHierarchy)" [ngValue]="isNew ? plot.temp_id : plot.id_plot">
             {{ '— '.repeat(plot.depth - 1) }}{{ plot.code_plot }}
@@ -486,22 +486,22 @@
 
       <div class="form-group">
         <small>Code placette :</small>
-        <input class="form-control form-control-sm" [formControl]="formPlot.controls.code_plot" />
+        <input #codePlotInput class="form-control form-control-sm" tabindex="1" [formControl]="formPlot.controls.code_plot" />
       </div>
 
       <div class="form-group" *ngIf="formPlot.controls.id_parent.value === null">
         <small>Distance ( mètres ) :</small>
-        <input type="number" class="form-control form-control-sm" [formControl]="formPlot.controls.distance_plot" />
+        <input type="number" class="form-control form-control-sm" tabindex="2" [formControl]="formPlot.controls.distance_plot" />
       </div>
     </form>
   </div>
   <div class="modal-footer d-flex justify-content-between">
-    <button type="button" class="btn btn-default btn-sm" (click)="d('Close click')">Fermer</button>
+    <button type="button" class="btn btn-default btn-sm" tabindex="5" (click)="d('Close click')">Fermer</button>
     <div>
-      <button type="button" class="btn btn-outline-success btn-sm mr-2" [disabled]="formPlot.invalid" (click)="onSaveAndContinuePlot()">
+      <button type="button" class="btn btn-outline-success btn-sm mr-2" tabindex="3" [disabled]="formPlot.invalid" (click)="onSaveAndContinuePlot(codePlotInput)">
         Enregistrer et continuer
       </button>
-      <button type="button" class="btn btn-success btn-sm" [disabled]="formPlot.invalid" (click)="onSavePlot()">
+      <button type="button" class="btn btn-success btn-sm" tabindex="4" [disabled]="formPlot.invalid" (click)="onSavePlot()">
         Enregistrer
       </button>
     </div>

@@ -78,11 +78,11 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
 
     if (!this.currentSite) {
       forkJoin([
-        this.nomenclatureServ.getNomenclature('STRATE_PLACETTE', null, null, null, {
-          orderby: 'label_default',
+        this.nomenclatureServ.getNomenclature('STRATE_VEGETATION_MFS', null, null, null, {
+          orderby: 'hierarchy',
         }),
         this.nomenclatureServ.getNomenclature('SUBSTRAT_PLACETTE', null, null, null, {
-          orderby: 'label_default',
+          orderby: 'hierarchy',
         }),
         this.transectApi.getOneTransect(this.idSite),
       ]).subscribe(
@@ -114,11 +114,11 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
       this.getPlots();
 
       forkJoin([
-        this.nomenclatureServ.getNomenclature('STRATE_PLACETTE', null, null, null, {
-          orderby: 'label_default',
+        this.nomenclatureServ.getNomenclature('STRATE_VEGETATION_MFS', null, null, null, {
+          orderby: 'hierarchy',
         }),
         this.nomenclatureServ.getNomenclature('SUBSTRAT_PLACETTE', null, null, null, {
-          orderby: 'label_default',
+          orderby: 'hierarchy',
         }),
       ]).subscribe(
         (results: any) => {
@@ -301,13 +301,13 @@ onSubmitVisit() {
 
         if (preparedPlot.strata_survey) {
           preparedPlot.strata_survey = preparedPlot.strata_survey.map(stratum => {
-            const { label_default, ...rest } = stratum;
+            const { label_default,definition_default, ...rest } = stratum;
             return rest;
           });
         }
         if (preparedPlot.substrates_survey) {
           preparedPlot.substrates_survey = preparedPlot.substrates_survey.map(substrate => {
-            const { label_default, ...rest } = substrate;
+            const { label_default,definition_default, ...rest } = substrate;
             return rest;
           });
         }
@@ -342,7 +342,14 @@ onSubmitVisit() {
     this.toastr.success('Visite enregistrée avec succès', '', {
       positionClass: 'toast-top-right',
     });
-    this.backToVisits();
+    if (this.isNew) {
+      this.backToVisits();
+    } else {
+      this.disabledForm = true;
+      this.edit_btn = 'Éditer';
+      this.checked = 0;
+      this.getVisit();
+    }
   }
 
   private onDataSavedError(error) {

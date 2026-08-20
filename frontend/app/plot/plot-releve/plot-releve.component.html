@@ -104,7 +104,9 @@
           formArrayName="strata_survey"
         >
           <ng-container *ngIf="!disabledForm || (disabledForm && stratum.controls.cover_percentage.value)">
-            <td>{{ stratum.controls.label_default.value }}</td>
+            <td>
+              <span [matTooltip]="stratum.controls.definition_default.value" matTooltipPosition="right">{{ stratum.controls.label_default.value }}</span>
+            </td>
             <td>
               <div class="input-group">
                 <input
@@ -141,7 +143,9 @@
           formArrayName="substrates_survey"
         >
           <ng-container *ngIf="!disabledForm || (disabledForm && substrate.controls.cover_percentage.value)">
-            <td>{{ substrate.controls.label_default.value }}</td>
+            <td>
+              <span [matTooltip]="substrate.controls.definition_default.value" matTooltipPosition="right">{{ substrate.controls.label_default.value }}</span>
+            </td>
             <td>
               <div class="input-group">
                 <input

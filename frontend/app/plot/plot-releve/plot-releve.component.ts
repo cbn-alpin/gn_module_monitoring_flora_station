@@ -66,8 +66,8 @@ export class PlotReleveComponent implements OnInit, OnChanges,OnDestroy {
     });
   }
 
-  private initStrata(): void {
-    this.strata.sort((a, b) => a.label_default.localeCompare(b.label_default));
+ private initStrata(): void {
+    this.strata.sort((a, b) => a.hierarchy.localeCompare(b.hierarchy));
 
     this.strata.forEach(stratum => {
       (this.plotForm.get('strata_survey') as FormArray).push(
@@ -76,13 +76,14 @@ export class PlotReleveComponent implements OnInit, OnChanges,OnDestroy {
           id_plot_survey_stratum: [null],
           cover_percentage: [null, Validators.compose([Validators.min(0), Validators.max(100)])],
           label_default: [stratum.label_default],
+          definition_default: [stratum.definition_default],
         })
       );
     });
   }
 
   private initSubstrates(): void {
-    this.substrates.sort((a, b) => a.label_default.localeCompare(b.label_default));
+    this.substrates.sort((a, b) => a.hierarchy.localeCompare(b.hierarchy));
 
     this.substrates.forEach(substrate => {
       (this.plotForm.get('substrates_survey') as FormArray).push(
@@ -91,6 +92,7 @@ export class PlotReleveComponent implements OnInit, OnChanges,OnDestroy {
           id_plot_survey_substrate: [null],
           cover_percentage: [null, Validators.compose([Validators.min(0), Validators.max(100)])],
           label_default: [substrate.label_default],
+          definition_default: [substrate.definition_default],
         })
       );
     });
@@ -109,7 +111,7 @@ export class PlotReleveComponent implements OnInit, OnChanges,OnDestroy {
       non_flowering_stems_count: this.data.non_flowering_stems_count,
       disturbances_survey: disturbances,
     });
-
+    
     for (const item of this.data.strata_survey || []) {
       if (item.cover_percentage != null) {
         this.hasStrataCovering = true;
@@ -157,11 +159,13 @@ export class PlotReleveComponent implements OnInit, OnChanges,OnDestroy {
 
     formValue.strata_survey = formValue.strata_survey.map(stratum => {
       delete stratum.label_default;
+      delete stratum.definition_default;
       return stratum;
     });
 
     formValue.substrates_survey = formValue.substrates_survey.map(substrate => {
       delete substrate.label_default;
+      delete substrate.definition_default;
       return substrate;
     });
 

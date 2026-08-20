@@ -323,7 +323,7 @@ export class TransectFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  onSaveAndContinuePlot() {
+  onSaveAndContinuePlot(codeInput?: HTMLInputElement) {
     let plot = this.formPlot.value;
     let savedParent = plot.id_parent;
 
@@ -345,6 +345,9 @@ export class TransectFormComponent implements OnInit, OnDestroy {
       this.formPlot.patchValue({ code_plot: null, distance_plot: null, id_parent: savedParent });
       this.formPlot.markAsPristine();
       this.toastr.success('Placette ajoutée avec succès', '', { positionClass: 'toast-top-right' });
+      if (codeInput) {
+        codeInput.focus();
+      }
     } else {
       plot.id_transect = this.currentSite.properties?.id_transect;
       this.plotApi.addPlot(plot).subscribe(
@@ -352,15 +355,18 @@ export class TransectFormComponent implements OnInit, OnDestroy {
           this.getPlots();
           this.formPlot.patchValue({ code_plot: null, distance_plot: null, id_parent: savedParent });
           this.formPlot.markAsPristine();
-          this.formTransect.markAsDirty(); 
+          this.formTransect.markAsDirty();
           this.toastr.success('Placette ajoutée avec succès', '', { positionClass: 'toast-top-right' });
+          if (codeInput) {
+            codeInput.focus();
+          }
         },
         error => {
           this.toastr.error("Erreur lors de l'ajout de la placette", '', { positionClass: 'toast-top-right' });
         }
       );
     }
-  }
+}
 
   onEdit() {
     this.disabledForm = !this.disabledForm;
@@ -400,7 +406,12 @@ export class TransectFormComponent implements OnInit, OnDestroy {
       this.transectApi.updateTransect(transect).subscribe(
         data => {
           this.toastr.success('Le transect a été modifié avec succès', '', { positionClass: 'toast-top-right' });
-          this.backToSites();
+          this.currentSite = data;
+          this.storeService.setCurrentSite(this.currentSite);
+          this.pachForm();
+          this.plots = this.currentSite.properties.cor_plots || [];
+          this.disabledForm = true;
+          this.edit_btn = 'Éditer';
         },
         error => {
           this.toastr.error('Une erreur est survenue lors de la modification du transect', '', { positionClass: 'toast-top-right' });
