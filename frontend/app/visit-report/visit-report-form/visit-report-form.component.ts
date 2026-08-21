@@ -243,6 +243,7 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
 
     this.spinner = true;
     this.plotId = plot.id_plot;
+    this.isSubPlot = !!plot.id_parent;
     this.plotTitle = this.currentSite.properties.cor_plots.find(p => {
       return p.id_plot == this.plotId;
     }).code_plot;

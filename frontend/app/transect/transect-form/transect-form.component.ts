@@ -759,7 +759,7 @@ export class TransectFormComponent implements OnInit, OnDestroy {
   this.formEditStation.patchValue({ cd_nom: event.item.cd_nom });
   }
 
-  onSaveEditCurrentStation() {
+    onSaveEditCurrentStation() {
     let station = this.formEditStation.value;
     station.id_station = this.stationToEdit.properties.id_station;
     this.stationApi.updateStation(station).subscribe(
@@ -769,12 +769,14 @@ export class TransectFormComponent implements OnInit, OnDestroy {
         this.stationApi.getAllStations().subscribe((result: any) => {
           this.stations = result[1].features.sort((a, b) => a.properties.name.localeCompare(b.properties.name));
         });
-        this.transectApi.getOneTransect(this.idSite).subscribe(
-          (site: any) => {
-            this.currentSite = site;
-            this.storeService.setCurrentSite(this.currentSite);
-          }
-        );
+        if (this.idSite) {
+          this.transectApi.getOneTransect(this.idSite).subscribe(
+            (site: any) => {
+              this.currentSite = site;
+              this.storeService.setCurrentSite(this.currentSite);
+            }
+          );
+        }
         this.toastr.success('Station modifiée avec succès', '', { positionClass: 'toast-top-right' });
       },
       error => {
@@ -782,6 +784,7 @@ export class TransectFormComponent implements OnInit, OnDestroy {
       }
     );
 }
+
 
   onDeleteCurrentStation(content: any) {
     this.stationToDelete = this.selectedStation;
