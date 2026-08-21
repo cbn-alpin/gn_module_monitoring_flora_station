@@ -137,88 +137,93 @@ class VisitReportService:
         return self.visit_report_repo.save_visit(visit)
 
     def update_visit(self, id_visit, data):
-        
 
-        existing_visit = self.visit_report_repo.get_visit_by_id(id_visit)
-        if existing_visit is None:
-            raise NotFound(f"Visit {id_visit} does not exist")
+            existing_visit = self.visit_report_repo.get_visit_by_id(id_visit)
+            if existing_visit is None:
+                raise NotFound(f"Visit {id_visit} does not exist")
 
-        existing_dict = existing_visit.as_dict()
-        if data["visit_date_min"] != existing_dict["visit_date_min"]:
-            self.check_year_visit(
-                data["id_base_site"], data["visit_date_min"], id_base_visit=id_visit
-            )
+            existing_dict = existing_visit.as_dict()
+            if data["visit_date_min"] != existing_dict["visit_date_min"]:
+                self.check_year_visit(
+                    data["id_base_site"], data["visit_date_min"], id_base_visit=id_visit
+                )
 
-        plot_surveys = data.pop("plots", [])
-        observers_ids = data.pop("observers", [])
-        disturbances = data.pop("perturbations", [])
+            plot_surveys = data.pop("plots", [])
+            observers_ids = data.pop("observers", [])
+            disturbances = data.pop("perturbations", [])
 
-        visit = MfsVisit(**data)
+            with DB.session.no_autoflush:
+                visit = DB.session.get(MfsVisit, id_visit)
+                for key, value in data.items():
+                    setattr(visit, key, value)
 
-        for plot_survey_data in plot_surveys:
-            strata = plot_survey_data.pop("strata_survey", [])
-            substrates = plot_survey_data.pop("substrates_survey", [])
-            disturbances_survey = plot_survey_data.pop("disturbances_survey", [])
+                visit.cor_releve_plot.clear()
+                visit.observers.clear()
 
-            id_plot_survey = plot_survey_data.get("id_plot_survey")
-            if id_plot_survey:
-                plot_survey = DB.session.get(MfsPlotSurvey, id_plot_survey)
-                for key, value in plot_survey_data.items():
-                    setattr(plot_survey, key, value)
-            else:
-                plot_survey = MfsPlotSurvey(**plot_survey_data)
+                for plot_survey_data in plot_surveys:
+                    strata = plot_survey_data.pop("strata_survey", [])
+                    substrates = plot_survey_data.pop("substrates_survey", [])
+                    disturbances_survey = plot_survey_data.pop("disturbances_survey", [])
 
-            for stratum in strata:
-                if stratum.get("cover_percentage") is not None:
-                    existing_id = stratum.get("id_plot_survey_stratum")
-                    if existing_id:
-                        existing_stratum = next(
-                            (s for s in plot_survey.cor_releve_strats if s.id_plot_survey_stratum == existing_id),
-                            None,
-                        )
-                        if existing_stratum:
-                            existing_stratum.cover_percentage = stratum["cover_percentage"]
-                        else:
-                            plot_survey.cor_releve_strats.append(MfsPlotSurveyStratum(**stratum))
+                    id_plot_survey = plot_survey_data.get("id_plot_survey")
+                    if id_plot_survey:
+                        plot_survey = DB.session.get(MfsPlotSurvey, id_plot_survey)
+                        for key, value in plot_survey_data.items():
+                            setattr(plot_survey, key, value)
                     else:
-                        plot_survey.cor_releve_strats.append(MfsPlotSurveyStratum(**stratum))
-                elif "id_plot_survey_stratum" in stratum and stratum["id_plot_survey_stratum"]:
-                    self.visit_report_repo.delete_stratum(stratum["id_plot_survey_stratum"])
+                        plot_survey_data["id_base_visit"] = id_visit
+                        plot_survey = MfsPlotSurvey(**plot_survey_data)
 
-            for substrate in substrates:
-                if substrate.get("cover_percentage") is not None:
-                    existing_id = substrate.get("id_plot_survey_substrate")
-                    if existing_id:
-                        existing_substrate = next(
-                            (s for s in plot_survey.cor_releve_substrats if s.id_plot_survey_substrate == existing_id),
-                            None,
-                        )
-                        if existing_substrate:
-                            existing_substrate.cover_percentage = substrate["cover_percentage"]
-                        else:
-                            plot_survey.cor_releve_substrats.append(MfsPlotSurveySubstrate(**substrate))
-                    else:
-                        plot_survey.cor_releve_substrats.append(MfsPlotSurveySubstrate(**substrate))
-                elif "id_plot_survey_substrate" in substrate and substrate["id_plot_survey_substrate"]:
-                    self.visit_report_repo.delete_substrate(
-                        substrate["id_plot_survey_substrate"]
+                    for stratum in strata:
+                        if stratum.get("cover_percentage") is not None:
+                            existing_id = stratum.get("id_plot_survey_stratum")
+                            if existing_id:
+                                existing_stratum = next(
+                                    (s for s in plot_survey.cor_releve_strats if s.id_plot_survey_stratum == existing_id),
+                                    None,
+                                )
+                                if existing_stratum:
+                                    existing_stratum.cover_percentage = stratum["cover_percentage"]
+                                else:
+                                    plot_survey.cor_releve_strats.append(MfsPlotSurveyStratum(**stratum))
+                            else:
+                                plot_survey.cor_releve_strats.append(MfsPlotSurveyStratum(**stratum))
+                        elif "id_plot_survey_stratum" in stratum and stratum["id_plot_survey_stratum"]:
+                            self.visit_report_repo.delete_stratum(stratum["id_plot_survey_stratum"])
+
+                    for substrate in substrates:
+                        if substrate.get("cover_percentage") is not None:
+                            existing_id = substrate.get("id_plot_survey_substrate")
+                            if existing_id:
+                                existing_substrate = next(
+                                    (s for s in plot_survey.cor_releve_substrats if s.id_plot_survey_substrate == existing_id),
+                                    None,
+                                )
+                                if existing_substrate:
+                                    existing_substrate.cover_percentage = substrate["cover_percentage"]
+                                else:
+                                    plot_survey.cor_releve_substrats.append(MfsPlotSurveySubstrate(**substrate))
+                            else:
+                                plot_survey.cor_releve_substrats.append(MfsPlotSurveySubstrate(**substrate))
+                        elif "id_plot_survey_substrate" in substrate and substrate["id_plot_survey_substrate"]:
+                            self.visit_report_repo.delete_substrate(
+                                substrate["id_plot_survey_substrate"]
+                            )
+
+                    self.visit_report_repo.delete_plot_disturbances(
+                        plot_survey_data.get("id_plot_survey")
                     )
+                    for disturbance in disturbances_survey:
+                        plot_survey.cor_releve_perturbations.append(MfsPlotSurveyDisturbance(**disturbance))
 
-            self.visit_report_repo.delete_plot_disturbances(
-                plot_survey_data.get("id_plot_survey")
-            )
-            for disturbance in disturbances_survey:
-                plot_survey.cor_releve_perturbations.append(MfsPlotSurveyDisturbance(**disturbance))
+                    visit.cor_releve_plot.append(plot_survey)
 
-            if not id_plot_survey:
-                visit.cor_releve_plot.append(plot_survey)
+                self.visit_report_repo.delete_visit_disturbances(id_visit)
+                for disturbance in disturbances:
+                    visit.cor_visit_perturbation.append(MfsVisitDisturbance(**disturbance))
 
-        self.visit_report_repo.delete_visit_disturbances(id_visit)
-        for disturbance in disturbances:
-            visit.cor_visit_perturbation.append(MfsVisitDisturbance(**disturbance))
+                observers = self.visit_report_repo.get_users_by_ids(observers_ids)
+                for observer in observers:
+                    visit.observers.append(observer)
 
-        observers = self.visit_report_repo.get_users_by_ids(observers_ids)
-        for observer in observers:
-            visit.observers.append(observer)
-
-        return self.visit_report_repo.merge_visit(visit)
+            return self.visit_report_repo.merge_visit(visit)
