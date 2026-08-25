@@ -1,7 +1,7 @@
 {
   "name": "monitoring_flore_station",
   "version": "1.0.0",
-  "description": "Module Suivi Flore Station",
+  "description": "Flora Station Monitoring module",
   "license": "GPLv3",
   "dependencies": {
     "Leaflet.Deflate": "^2.1.0"
