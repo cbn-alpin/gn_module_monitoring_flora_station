@@ -2,7 +2,7 @@
 from sqlalchemy import select, func, distinct, and_, or_, desc
 
 from geonature.utils.env import DB
-from geonature.core.gn_monitoring.models import corVisitObserver, TBaseVisits
+from geonature.core.gn_monitoring.models import CorVisitObserver, TBaseVisits
 from ref_geo.models import LAreas
 from pypnusershub.db.models import User, Organisme
 from apptax.taxonomie.models import Taxref
@@ -78,8 +78,8 @@ class StationRepository:
                     LAreas.id_type == func.ref_geo.get_id_area_type(municipality_type_code),
                 ),
             )
-            .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
-            .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
+            .outerjoin(CorVisitObserver.__table__, CorVisitObserver.__table__.c.id_base_visit == TBaseVisits.id_base_visit)
+            .outerjoin(User, User.id_role == CorVisitObserver.__table__.c.id_role)
             .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
             .group_by(MfsStation.id_station, Taxref.lb_nom)
             .order_by(MfsStation.name)
@@ -119,8 +119,8 @@ class StationRepository:
             .select_from(MfsStation)
             .outerjoin(MfsTransect, MfsTransect.id_station == MfsStation.id_station)
             .outerjoin(TBaseVisits, TBaseVisits.id_base_site == MfsTransect.id_base_site)
-            .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
-            .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
+            .outerjoin(CorVisitObserver.__table__, CorVisitObserver.__table__.c.id_base_visit == TBaseVisits.id_base_visit)
+            .outerjoin(User, User.id_role == CorVisitObserver.__table__.c.id_role)
             .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
             .distinct()
         )
