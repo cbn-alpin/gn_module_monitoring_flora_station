@@ -1,11 +1,12 @@
 import datetime
 from flask import g
-from sqlalchemy import and_, distinct, func, update, select
+from sqlalchemy import and_, distinct, func, insert, update, select
 
 from geonature.utils.env import DB
 from geonature.core.gn_monitoring.models import (
-    corVisitObserver,
-    corSiteArea,
+    CorVisitObserver,
+    cor_site_area,
+    cor_site_type,
     TBaseVisits,
     TBaseSites,
 )
@@ -49,14 +50,17 @@ class TransectRepository:
         return DB.session.execute(query).first()[0]
 
     def get_sites_without_transect(self, site_type_code):
+        site_type_id = self.get_id_type_site(site_type_code)
         q = (
             select(TBaseSites)
+            .join(
+                cor_site_type,
+                cor_site_type.c.id_base_site == TBaseSites.id_base_site,
+            )
             .outerjoin(MfsTransect, TBaseSites.id_base_site == MfsTransect.id_base_site)
             .where(
-                and_(
-                    TBaseSites.id_nomenclature_type_site == self.get_id_type_site(site_type_code),
-                    MfsTransect.id_base_site == None,
-                )
+                cor_site_type.c.id_type_site == site_type_id,
+                MfsTransect.id_base_site.is_(None),
             )
         )
         return DB.session.scalars(q).unique().all()
@@ -83,14 +87,14 @@ class TransectRepository:
             )
             .outerjoin(MfsStation, MfsTransect.id_station == MfsStation.id_station)
             .outerjoin(Taxref, MfsStation.cd_nom == Taxref.cd_nom)
-            .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
-            .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
+            .outerjoin(CorVisitObserver.__table__, CorVisitObserver.__table__.c.id_base_visit == TBaseVisits.id_base_visit)
+            .outerjoin(User, User.id_role == CorVisitObserver.__table__.c.id_role)
             .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
-            .outerjoin(corSiteArea, corSiteArea.c.id_base_site == MfsTransect.id_base_site)
+            .outerjoin(cor_site_area, cor_site_area.c.id_base_site == MfsTransect.id_base_site)
             .outerjoin(
                 LAreas,
                 and_(
-                    LAreas.id_area == corSiteArea.c.id_area,
+                    LAreas.id_area == cor_site_area.c.id_area,
                     LAreas.id_type == func.ref_geo.get_id_area_type(municipality_type_code),
                 ),
             )
@@ -115,8 +119,8 @@ class TransectRepository:
             .outerjoin(TBaseVisits, TBaseVisits.id_base_site == MfsTransect.id_base_site)
             .outerjoin(MfsStation, MfsTransect.id_station == MfsStation.id_station)
             .outerjoin(Taxref, MfsStation.cd_nom == Taxref.cd_nom)
-            .outerjoin(corVisitObserver, corVisitObserver.c.id_base_visit == TBaseVisits.id_base_visit)
-            .outerjoin(User, User.id_role == corVisitObserver.c.id_role)
+            .outerjoin(CorVisitObserver.__table__, CorVisitObserver.__table__.c.id_base_visit == TBaseVisits.id_base_visit)
+            .outerjoin(User, User.id_role == CorVisitObserver.__table__.c.id_role)
             .outerjoin(Organisme, Organisme.id_organisme == User.id_organisme)
             .group_by(MfsTransect, Taxref.lb_nom)
         )
@@ -131,9 +135,12 @@ class TransectRepository:
             .group_by(MfsTransect.id_base_site)
         )
 
-    def create_site(self, transect_label, base_site_description, geom_start, geom_end, module_code, site_type_code):
+    def create_site(
+        self, transect_label, base_site_description, 
+        geom_start, geom_end, module_code, site_type_code
+        ):
+        site_type_id = self.get_id_type_site(site_type_code)
         site = TBaseSites(
-            id_nomenclature_type_site=self.get_id_type_site(site_type_code),
             base_site_name=f"FLO - {module_code} - {transect_label}",
             base_site_description=base_site_description,
             first_use_date=datetime.datetime.now(),
@@ -142,6 +149,12 @@ class TransectRepository:
         )
         DB.session.add(site)
         DB.session.flush()
+        DB.session.execute(
+            insert(cor_site_type).values(
+                id_base_site=site.id_base_site,
+                id_type_site=site_type_id,
+            )
+        )
         site.base_site_code = f"FLO-{module_code}-{site.id_base_site}"
         return site
 

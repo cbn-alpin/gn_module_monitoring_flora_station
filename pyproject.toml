@@ -4,7 +4,8 @@ description = "GeoNature module for monitoring flora on a station."
 readme = "README.md"
 requires-python = ">=3.9"
 keywords = ["monitoring", "flore", "station", "taxon"]
-license = {file = "LICENSE"}
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
 maintainers = [
     {name = "Conservatoire Botanique National Alpin", email = "geonature@cbn-alpin.fr"},
 ]
@@ -16,7 +17,6 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU Affero General Public License v3",
     "Operating System :: OS Independent",
 ]
 urls.homepage = "https://github.com/cbn-alpin/gn_module_monitoring_flora_station"
@@ -44,7 +44,7 @@ migrations = "gn_module_monitoring_flora_station:migrations"
 alembic_branch = "gn_module_monitoring_flora_station:MODULE_DB_BRANCH"
 
 [build-system]
-requires = ["setuptools>=60.0.0", "wheel"]
+requires = ["setuptools>=77.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.dynamic]
@@ -63,9 +63,6 @@ minversion = "6.0"
 testpaths = [
     "backend",
 ]
-
-[tool.distutils.bdist_wheel]
-universal = true
 
 [tool.black]
 line-length = 100
