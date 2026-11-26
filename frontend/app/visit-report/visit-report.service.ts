@@ -37,6 +37,6 @@ export class VisitReportService {
   }
 
   getDefaultVisit() {
-    return { id_base_visit: null, observers: [], perturbations: [], cor_releve_plot: [] };
+    return { id_base_visit: undefined, observers: [], perturbations: [], cor_releve_plot: [] };
   }
 }

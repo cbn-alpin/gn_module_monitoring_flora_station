@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewChecked,ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewChecked, ViewChild } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -7,7 +7,6 @@ import { forkJoin } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 import * as _ from 'lodash';
 
-import { CommonService } from '@geonature_common/service/common.service';
 import { DataFormService } from '@geonature_common/form/data-form.service';
 import { ConfigService } from '@geonature/services/config.service';
 
@@ -29,26 +28,26 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
   idSite: number;
   idVisit: number;
   loadForm: boolean = false;
-  visit: IVisit;
+  visit?: IVisit;
   isNew: boolean;
   public visit_name: string = 'Nouvelle visite';
-  public id_base_site: number;
+  public id_base_site?: number;
   public strata = [];
   public substrates = [];
   checked = 0;
-  currentSite: ISite;
+  currentSite?: ISite;
   plots: PlotSurvey[] = [];
-  plotId: number;
-  visitForm: FormGroup;
-  plotTitle: string;
-  submit_label: string;
-  selectedPlot: PlotSurvey;
-  spinner: boolean;
+  plotId?: number;
+  visitForm?: FormGroup;
+  plotTitle?: string;
+  submit_label: 'Modifier la visite' | 'Enregistrer la visite' = 'Enregistrer la visite';
+  selectedPlot?: PlotSurvey;
+  spinner: boolean = false;
   public disabledForm: boolean = true;
   public edit_btn: string = 'Éditer';
   public updateIsAllowed: boolean = false;
   public addIsAllowed: boolean = false;
-  public plotHierarchy = [];
+  public plotHierarchy: any[] = [];
   public expandedPlots: { [key: number]: boolean } = {};
   @ViewChild(PlotReleveComponent) plotReleveComponent!: PlotReleveComponent;
   public isSubPlot: boolean = false;
@@ -56,7 +55,6 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
   constructor(
     private config: ConfigService,
     private activatedRoute: ActivatedRoute,
-    private commonService: CommonService,
     public router: Router,
     private formBuilder: FormBuilder,
     public dateParser: NgbDateParserFormatter,
@@ -67,57 +65,60 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
     private toastr: ToastrService,
     private nomenclatureServ: DataFormService,
     private userService: UserService
-  ) {}
-
- ngOnInit() {
+  ) {
     this.idSite = this.activatedRoute.snapshot.params['idSite'];
     this.idVisit = this.activatedRoute.snapshot.params['idVisit'];
     this.isNew = !this.idVisit;
     this.currentSite = this.storeService.getCurrentSite();
+  }
+
+  ngOnInit() {
     this.initForm();
 
     if (!this.currentSite) {
       forkJoin([
-        this.nomenclatureServ.getNomenclature('STRATE_VEGETATION_MFS', null, null, null, {
+        this.nomenclatureServ.getNomenclature('STRATE_VEGETATION_MFS', undefined, undefined, undefined, {
           orderby: 'hierarchy',
         }),
-        this.nomenclatureServ.getNomenclature('SUBSTRAT_PLACETTE', null, null, null, {
+        this.nomenclatureServ.getNomenclature('SUBSTRAT_PLACETTE', undefined, undefined, undefined, {
           orderby: 'hierarchy',
         }),
         this.transectApi.getOneTransect(this.idSite),
       ]).subscribe(
-        (results: any) => {
+        (results: [any, any, ISite]) => {
           this.strata = results[0] ? results[0].values : [];
           this.substrates = results[1] ? results[1].values : [];
           this.renameKey(this.strata, 'id_nomenclature_stratum');
           this.renameKey(this.substrates, 'id_nomenclature_substrate');
-          this.currentSite = results[2];
+          this.currentSite = results[2] ?? null;
           this.storeService.setCurrentSite(this.currentSite);
-          this.id_base_site = this.currentSite.properties.id_base_site;
-          this.plotId = this.currentSite.properties.cor_plots[0].id_plot;
-          this.plotTitle = this.currentSite.properties.cor_plots[0].code_plot;
+          this.id_base_site = this.currentSite.properties?.id_base_site;
+          const corPlot: { id_plot?: number, code_plot?: string } = this.currentSite.properties?.cor_plots?.[0] ?? null;
+          this.plotId = corPlot?.id_plot;
+          this.plotTitle = corPlot?.code_plot;
           this.getPlots();
           this.finishInit();
         },
         error => {
           this.toastr.error(
             'Une erreur est survenue lors de la récupération des informations sur le serveur.',
-            '',
+            error,
             { positionClass: 'toast-top-right' }
           );
         }
       );
     } else {
-      this.plotId = this.currentSite.properties.cor_plots[0].id_plot;
-      this.plotTitle = this.currentSite.properties.cor_plots[0].code_plot;
-      this.id_base_site = this.currentSite.properties.id_base_site;
+      const corPlot: { id_plot?: number, code_plot?: string } = this.currentSite.properties?.cor_plots?.[0] ?? null;
+      this.plotId = corPlot?.id_plot;
+      this.plotTitle = corPlot?.code_plot;
+      this.id_base_site = this.currentSite?.properties?.id_base_site;
       this.getPlots();
 
       forkJoin([
-        this.nomenclatureServ.getNomenclature('STRATE_VEGETATION_MFS', null, null, null, {
+        this.nomenclatureServ.getNomenclature('STRATE_VEGETATION_MFS', undefined, undefined, undefined, {
           orderby: 'hierarchy',
         }),
-        this.nomenclatureServ.getNomenclature('SUBSTRAT_PLACETTE', null, null, null, {
+        this.nomenclatureServ.getNomenclature('SUBSTRAT_PLACETTE', undefined, undefined, undefined, {
           orderby: 'hierarchy',
         }),
       ]).subscribe(
@@ -131,13 +132,13 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
         error => {
           this.toastr.error(
             'Une erreur est survenue lors de la récupération des informations sur le serveur.',
-            '',
+            error,
             { positionClass: 'toast-top-right' }
           );
         }
       );
     }
-}
+  }
 
   private finishInit() {
     if (!this.isNew) {
@@ -161,7 +162,7 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
     }
   }
 
-  private renameKey(list, targetKey: string) {
+  private renameKey(list: any[], targetKey: string) {
     list.forEach(element => {
       element[targetKey] = element.id_nomenclature;
       delete element.id_nomenclature;
@@ -170,12 +171,12 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
 
   private getVisit() {
     this._api.getOneVisit(this.idVisit).subscribe(
-      (data: any) => {
+      (data: IVisit) => {
         this.visit = data;
         this.userService.check_user_cruved_visit('U', this.visit).subscribe(ucruved => {
           this.updateIsAllowed = ucruved;
         });
-        this.visit.perturbations = null;
+        this.visit.perturbations = undefined;
         if (this.visit.cor_visit_perturbation) {
           this.visit.perturbations = this.visit.cor_visit_perturbation.map(
             (perturbation: any) => perturbation.t_nomenclature
@@ -183,13 +184,13 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
         }
         this.patchForm();
         this.plots = _.clone(this.visit.cor_releve_plot);
-       
-        this.selectedPlot = this.visit.cor_releve_plot.find(plot => {
+
+        this.selectedPlot = this.visit.cor_releve_plot?.find(plot => {
           return plot.id_plot == this.plotId;
         });
-        this.currentSite.properties.cor_plots.map((plotlist: any) => {
+        this.currentSite?.properties?.cor_plots?.map((plotlist: any) => {
           if (
-            !this.visit.cor_releve_plot.find(plot => {
+            !this.visit?.cor_releve_plot?.find(plot => {
               return plot.id_plot == plotlist.id_plot;
             })
           )
@@ -199,7 +200,7 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
       },
       error => {
         if (error.status != 404) {
-          this.toastr.error('Une erreur est survenue lors du chargement de votre relevé', '', {
+          this.toastr.error('Une erreur est survenue lors du chargement de votre relevé', error, {
             positionClass: 'toast-top-right',
           });
         }
@@ -207,8 +208,8 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
     );
   }
 
-  getPlotSurvey(plotSurvey) {
-    this.currentSite.properties.cor_plots.map((plot: any) => {
+  getPlotSurvey(plotSurvey: any[]) {
+    this.currentSite?.properties?.cor_plots?.map((plot: any) => {
       if (plot.id_plot == plotSurvey[0].id_plot) {
         plot.status = plotSurvey[0].status;
         if (plotSurvey[1] == true) {
@@ -224,19 +225,22 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
     } else this.plots.push(plotSurvey[0]);
 
     if (
-      _.find(this.plots, plot => {
+      _.find(this.plots, (plot: any) => {
         return plot.status == false;
       })
     )
-      this.visitForm.controls['plots'].setErrors({ incorrect: true });
-    else this.visitForm.controls['plots'].setErrors(null);
+      this.visitForm?.controls['plots'].setErrors({ incorrect: true });
+    else this.visitForm?.controls['plots'].setErrors(null);
   }
 
   backToVisits() {
-    this.router.navigate([`${this.config['MFS']['MODULE_URL']}/transects`, this.id_base_site]);
+    this.router.navigate(
+      [`${this.config['MFS']['MODULE_URL']}/transects`,
+      this.id_base_site ?? this.currentSite?.properties?.id_base_site]
+    );
   }
 
-  onChangePlot(plot) {
+  onChangePlot(plot: { id_plot: any, id_parent: any }) {
     if (this.plotReleveComponent) {
       this.plotReleveComponent.onFieldChange();
     }
@@ -244,7 +248,7 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
     this.spinner = true;
     this.plotId = plot.id_plot;
     this.isSubPlot = !!plot.id_parent;
-    this.plotTitle = this.currentSite.properties.cor_plots.find(p => {
+    this.plotTitle = this.currentSite?.properties?.cor_plots?.find(p => {
       return p.id_plot == this.plotId;
     }).code_plot;
     this.selectedPlot = this.plots.find(p => {
@@ -253,9 +257,9 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
     setTimeout(() => {
       this.spinner = false;
     }, 300);
-}
+  }
 
-  isActive(plot) {
+  isActive(plot: { id_plot: any }) {
     return this.plotId === plot.id_plot;
   }
 
@@ -267,79 +271,86 @@ export class VisitReportFormComponent implements OnInit, AfterViewChecked {
       perturbations: new Array(),
       plots: null,
     });
-    this.visitForm.controls['plots'].statusChanges.subscribe(status => {});
+    this.visitForm.controls['plots'].statusChanges.subscribe(status => { });
   }
 
-onSubmitVisit() {
+  onSubmitVisit() {
     if (this.plotReleveComponent) {
       this.plotReleveComponent.onFieldChange();
     }
 
-    if (this.visitForm.valid) {
+    if (this.visitForm?.valid) {
       let preparedData: any = {};
       preparedData['id_base_visit'] = this.visitForm.value['id_base_visit'];
-      preparedData['observers'] = this.visitForm.value['observers'].map(obs => {
+      preparedData['observers'] = this.visitForm.value['observers'].map((obs: { id_role: any }) => {
         return obs.id_role;
       });
       if (this.visitForm.value['perturbations'])
-        preparedData['perturbations'] = this.visitForm.value['perturbations'].map(perturbation => {
-          if (!perturbation.hasOwnProperty('id_nomenclature_disturbance')) {
-            return { id_nomenclature_disturbance: perturbation.id_nomenclature };
-          } else {
-            return { id_nomenclature_disturbance: perturbation.id_nomenclature_disturbance };
-          }
-        });
+        preparedData['perturbations'] = this.visitForm.value['perturbations'].map(
+          (perturbation: { id_nomenclature: any, id_nomenclature_disturbance: any }) => {
+            if (!perturbation.hasOwnProperty('id_nomenclature_disturbance')) {
+              return { id_nomenclature_disturbance: perturbation.id_nomenclature };
+            } else {
+              return { id_nomenclature_disturbance: perturbation.id_nomenclature_disturbance };
+            }
+          });
       preparedData['visit_date_min'] = this.dateParser.format(
         this.visitForm.value['visit_date_min']
       );
       preparedData['id_base_site'] = this.id_base_site;
 
-      const plotsPayload = this.plots.map((plot: any) => {
-        const preparedPlot = _.cloneDeep(plot);
-        delete preparedPlot.status;
-        delete preparedPlot.isEmpty;
-        delete preparedPlot.isModified;
+      const plotsPayload = this.plots
+        .filter(plot => plot.id_plot)
+        .map((plot: any) => {
+          const preparedPlot = _.cloneDeep(plot);
+          delete preparedPlot.status;
+          delete preparedPlot.isEmpty;
+          delete preparedPlot.isModified;
 
-        if (preparedPlot.strata_survey) {
-          preparedPlot.strata_survey = preparedPlot.strata_survey.map(stratum => {
-            const { label_default,definition_default, ...rest } = stratum;
-            return rest;
-          });
-        }
-        if (preparedPlot.substrates_survey) {
-          preparedPlot.substrates_survey = preparedPlot.substrates_survey.map(substrate => {
-            const { label_default,definition_default, ...rest } = substrate;
-            return rest;
-          });
-        }
-        if (preparedPlot.disturbances_survey) {
-          preparedPlot.disturbances_survey = preparedPlot.disturbances_survey.map(disturbance => ({
-            id_nomenclature_disturbance:
-              disturbance.id_nomenclature_disturbance ?? disturbance.id_nomenclature,
-          }));
-        }
-        return preparedPlot;
-      });
+          if (preparedPlot.strata_survey) {
+            preparedPlot.strata_survey = preparedPlot.strata_survey.map(
+              (stratum: any) => {
+                const { label_default, definition_default, ...rest } = stratum;
+                return rest;
+              });
+          }
+          if (preparedPlot.substrates_survey) {
+            preparedPlot.substrates_survey = preparedPlot.substrates_survey.map(
+              (substrate: any) => {
+                const { label_default, definition_default, ...rest } = substrate;
+                return rest;
+              });
+          }
+          if (preparedPlot.disturbances_survey) {
+            preparedPlot.disturbances_survey = preparedPlot.disturbances_survey.map(
+              (disturbance: any) => ({
+                id_nomenclature_disturbance:
+                  disturbance.id_nomenclature_disturbance ?? disturbance.id_nomenclature,
+              }));
+          }
+          return preparedPlot;
+        });
 
       preparedData['plots'] = plotsPayload;
       this.sendFormData(preparedData);
     }
-}
-  private sendFormData(preparedData) {
+  }
+
+  private sendFormData(preparedData: any) {
     if (this.isNew) {
       this._api.addVisit(preparedData).subscribe(
-        result => this.onDataSavedSuccess(result),
+        () => this.onDataSavedSuccess(),
         error => this.onDataSavedError(error)
       );
     } else {
       this._api.updateVisit({ idVisit: this.idVisit, data: preparedData }).subscribe(
-        result => this.onDataSavedSuccess(result),
+        () => this.onDataSavedSuccess(),
         error => this.onDataSavedError(error)
       );
     }
   }
 
-  private onDataSavedSuccess(result) {
+  private onDataSavedSuccess() {
     this.toastr.success('Visite enregistrée avec succès', '', {
       positionClass: 'toast-top-right',
     });
@@ -353,22 +364,22 @@ onSubmitVisit() {
     }
   }
 
-  private onDataSavedError(error) {
+  private onDataSavedError(error: any) {
+    const options = {
+      positionClass: 'toast-top-center',
+      timeOut: 5000,
+    };
     if (error.status === 409 && error.error?.description?.startsWith('PostYearError')) {
-      this.visitForm.controls['visit_date_min'].setErrors({ dateExist: true });
+      this.visitForm?.controls['visit_date_min'].setErrors({ dateExist: true });
       const title = 'Une visite existe déjà sur ce site pour cette année !';
       const msg = this.isNew
         ? "Veuillez plutôt éditer l'ancienne visite."
         : "Veuillez corriger l'année de la date de cette visite.";
-      const options = {
-        positionClass: 'toast-top-center',
-        timeOut: 5000,
-      };
+
       this.toastr.warning(msg, title, options);
     } else {
-      this.commonService.translateToaster('error', 'ErrorMessage');
+      this.toastr.error(error.error.error, '', options)
     }
-    console.log(error);
   }
 
   onEdit() {
@@ -376,12 +387,12 @@ onSubmitVisit() {
     if (!this.disabledForm) {
       this.edit_btn = 'Annuler';
     } else {
-      this.visitForm.reset();
-      this.plots = _.clone(this.visit.cor_releve_plot);
-      this.currentSite.properties.cor_plots.map((plotlist: any) => {
+      this.visitForm?.reset();
+      this.plots = _.clone(this.visit?.cor_releve_plot);
+      this.currentSite?.properties?.cor_plots?.map((plotlist: any) => {
         plotlist.isModified = false;
         if (
-          !this.visit.cor_releve_plot.find(plot => {
+          !this.visit?.cor_releve_plot?.find(plot => {
             return plot.id_plot == plotlist.id_plot;
           })
         )
@@ -393,11 +404,11 @@ onSubmitVisit() {
   }
 
   private patchForm() {
-    this.visitForm.patchValue({
+    this.visitForm?.patchValue({
       id_base_visit: this.idVisit,
-      visit_date_min: this.dateParser.parse(this.visit.visit_date_min),
-      observers: this.visit.observers,
-      perturbations: this.visit.perturbations,
+      visit_date_min: this.dateParser.parse(this.visit?.visit_date_min ?? ''),
+      observers: this.visit?.observers,
+      perturbations: this.visit?.perturbations,
     });
     this.loadForm = true;
   }
@@ -407,12 +418,12 @@ onSubmitVisit() {
   }
 
   getPlots() {
-    this.plotApi.getPlotByTransect(this.currentSite.properties?.id_transect).subscribe(
-      (data: any[]) => {
+    this.plotApi.getPlotByTransect(this.currentSite?.properties?.id_transect).subscribe(
+      (data: any) => {
         this.plotHierarchy = data;
       },
       error => {
-        this.toastr.error('Erreur lors de la récupération des placettes', '', {
+        this.toastr.error('Erreur lors de la récupération des placettes', error, {
           positionClass: 'toast-top-right',
         });
       }

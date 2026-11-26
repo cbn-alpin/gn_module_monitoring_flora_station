@@ -12,24 +12,16 @@
           <button type="button" class="btn btn-link btn-sm back-button" (click)="backToVisits()">
               <i class="fa fa-arrow-left" aria-hidden="true"> </i>
               Retour au transect n° {{ idSite }}
-          </button>
-        <div>
-            <button
-                *ngIf="!isNew && updateIsAllowed"
-                class="btn box-shadow"
-                [ngClass]="disabledForm ? 'btn-warning' : 'btn-secondary'"
-                (click)="onEdit()"
-            >
+            </button>
+            <div>
+              <button *ngIf="!isNew && updateIsAllowed" class="btn box-shadow"
+                [ngClass]="disabledForm ? 'btn-warning' : 'btn-secondary'" (click)="onEdit()" [disabled]="!this.plotId">
                 <i *ngIf="disabledForm" class="fa fa-edit" aria-hidden="true"> </i>
                 {{ edit_btn }}
-            </button>
-            <button
-                *ngIf="(!disabledForm && addIsAllowed) || (!disabledForm && updateIsAllowed)"
-                type="submit"
-                class="btn btn-success box-shadow ml-3 submit-btn"
-                [disabled]="!visitForm.valid"
-                (click)="onSubmitVisit()"
-            >
+              </button>
+              <button *ngIf="(!disabledForm && addIsAllowed) || (!disabledForm && updateIsAllowed)" type="submit"
+                class="btn btn-success box-shadow ml-3 submit-btn" [disabled]="!visitForm.valid || !this.plotId"
+                (click)="onSubmitVisit()">
                 <i class="material-icons">save</i>
                 {{ submit_label }}
             </button>
@@ -43,12 +35,12 @@
               </legend>
               <div class="form-group">
                 <label> Observateur(s) * :</label>
-                <pnx-observers
-                  [parentFormControl]="visitForm.controls.observers"
+                <pnx-observers 
+                  [parentFormControl]="visitForm.controls.observers" 
                   [bindAllItem]="true"
-                  [codeList]="storeService.sfsConfig.user_list_code"
-                  [disabled]="disabledForm"
-                >
+                  [codeList]="storeService.sfsConfig.user_list_code" 
+                  [disabled]="disabledForm" 
+                  [multiSelect]="true">
                 </pnx-observers>
               </div>
               <div class="form-group">

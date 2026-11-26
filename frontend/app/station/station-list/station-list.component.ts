@@ -19,7 +19,6 @@ import { MapListService } from '@geonature_common/map-list/map-list.service';
 import { ConfigService } from '@geonature/services/config.service';
 
 import { StationService } from '../station.service';
-import { TransectService } from '../../transect/transect.service';
 import { StoreService } from '../../shared/services/store.service';
 import { UserService } from '../../core/services/user.service';
 import { TaxonService } from '../../core/services/taxon.service';
@@ -68,7 +67,7 @@ export class CustomDatepickerI18n extends NgbDatepickerI18n {
 
 @Injectable()
 export class NgbDateCustomParserFormatter extends NgbDateParserFormatter {
-  parse(value: string): NgbDateStruct {
+  parse(): NgbDateStruct {
     throw new Error('Method not implemented.');
   }
   format(date: NgbDateStruct): string {
@@ -95,44 +94,44 @@ export class NgbDateCustomParserFormatter extends NgbDateParserFormatter {
   ],
 })
 export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
-  public sites;
-  public filteredData = [];
+  public sites?: any;
+  public filteredData: any[] = [];
   public addIsAllowed: boolean = false;
   public dataLoaded = false;
-  private modalRef: NgbModalRef;
-  public center;
-  public zoom;
-  private _map;
-  private _deflate_features;
-  public filterForm: FormGroup;
+  private modalRef?: NgbModalRef;
+  public center?: any;
+  public zoom?: any;
+  private _map?: any;
+  private _deflate_features?: any;
+  public filterForm?: FormGroup;
   public page = new Page();
   minDate: any;
   maxDate: any;
   public stations = [];
   public expandedStations: { [key: number]: Transect[] } = {};
-  public dataSource = new MatTableDataSource([]);
+  public dataSource = new MatTableDataSource();
   public columnsToDisplay = ['Station', 'Taxon', 'Nbre transect', 'Nbre visite', 'Dernière visite'];
   public columnsToDisplayWithExpand = [...this.columnsToDisplay, 'expand'];
   public expandedElement: any;
-  @ViewChild(MatPaginator) paginator: MatPaginator;
-  @ViewChild(MatSort) sort: MatSort;
+  @ViewChild(MatPaginator) paginator?: MatPaginator;
+  @ViewChild(MatSort) sort?: MatSort;
   public tabYear = [];
   public tabArea = [];
   public tabOrganism = [];
-  public tabTaxon=[];
+  public tabTaxon = [];
   public taxons: any[] = [];
   private transectLayers: L.Layer[] = [];
-  private selectedTransectLayer: L.Polyline = null;
+  public selectedTransectLayer?: L.Layer;
+  public selectedTransectId?: number;
   private transectLayerMap: Map<number, L.Polyline> = new Map();
-  private selectedTransectId: number = null;
-  public formEditStation: FormGroup;
+  public formEditStation?: FormGroup;
   private stationToEdit: any = null;
   public taxonCodeControl = new FormControl();
   public taxonFormatter = (taxon: any) => {
     return taxon?.nom_complet ? taxon.nom_complet : '';
   };
   private stationToDelete: any = null;
-  private confirmModalRef: NgbModalRef;
+  private confirmModalRef?: NgbModalRef;
   public columnTooltips: { [key: string]: string } = {
     'Station': 'Nom de la station',
     'Taxon': 'Taxon suivi sur la station',
@@ -150,7 +149,6 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
     private config: ConfigService,
     public mapService: MapService,
     private _stationApi: StationService,
-    private _transectApi: TransectService,
     private userService: UserService,
     public dateParser: NgbDateParserFormatter,
     datePickerConfig: NgbDatepickerConfig,
@@ -217,19 +215,20 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.filteredData.forEach(station => {
           if (!this.expandedStations[station.id_station]) {
             this._stationApi.getTransectsByStation(station.id_station).subscribe(
-              (data: any[]) => {
+              (data: any) => {
                 this.expandedStations[station.id_station] = data;
-                data.forEach(transect => {
-                  let line = L.polyline(
-                    [[transect.geom_start.coordinates[1], transect.geom_start.coordinates[0]],
-                    [transect.geom_end.coordinates[1], transect.geom_end.coordinates[0]]],
-                    { color: '#3388ff' }
-                  )
-                    .bindTooltip(transect.transect_label)
-                    .addTo(this._map);
-                  this.transectLayerMap.set(transect.id_transect, line);
-                  this.transectLayers.push(line);
-                });
+                data.forEach(
+                  (transect: Transect) => {
+                    let line = L.polyline(
+                      [[transect.geom_start.coordinates[1], transect.geom_start.coordinates[0]],
+                      [transect.geom_end.coordinates[1], transect.geom_end.coordinates[0]]],
+                      { color: '#3388ff' }
+                    )
+                      .bindTooltip(transect.transect_label)
+                      .addTo(this._map);
+                    this.transectLayerMap.set(transect.id_transect, line);
+                    this.transectLayers.push(line);
+                  });
               }
             );
           }
@@ -247,25 +246,25 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.addCustomControl();
     this.addLegend();
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
+    this.dataSource.paginator = this.paginator ?? null;
+    this.dataSource.sort = this.sort ?? null;
     this._stationApi.getStationsYears().subscribe(
-      (data: any[]) => {
+      (data: any) => {
         this.tabYear = data;
       }
     );
     this._stationApi.getStationsArea().subscribe(
-      (data: any[]) => {
+      (data: any) => {
         this.tabArea = data;
       }
     );
     this._stationApi.getOrganism().subscribe(
-      (data: any[]) => {
+      (data: any) => {
         this.tabOrganism = data;
       }
     );
     this._stationApi.getStationsTaxa().subscribe(
-      (data: any[]) => {
+      (data: any) => {
         this.tabTaxon = data;
       }
     );
@@ -280,8 +279,8 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
   getStations(params?: any) {
     this.dataLoaded = false;
     this._stationApi.getAllStations(params).subscribe(
-      data => {
-        if (data !== null) {
+      (data: any) => {
+        if (data != null) {
           if (this._deflate_features) {
             this._deflate_features.clearLayers();
           }
@@ -292,21 +291,31 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
             this.page.size = data[0].itemsPerPage;
           }
 
-          this.filteredData = data[1].features.map(feature => {
-            this._stationApi.getTransectsByStation(feature.properties.id_station).subscribe(
-              (transects: Transect[]) => {
-                this.expandedStations[feature.properties.id_station] = transects;
-              }
-            );
-            return {
-              'Station': feature.properties.name !== "" ? feature.properties.name : "Sans nom",
-              'Taxon': feature.properties.taxon_name,
-              'Nbre visite': feature.properties.nb_visits,
-              'Nbre transect': feature.properties.nb_transect,
-              'Dernière visite': feature.properties.last_visit,
-              'id_station': feature.properties.id_station
-            };
-          });
+          this.filteredData = data[1].features.map(
+            (feature: {
+              properties: {
+                id_station: number,
+                name: string,
+                taxon_name: string,
+                nb_visits: number,
+                nb_transect: number,
+                last_visit: any
+              },
+            }) => {
+              this._stationApi.getTransectsByStation(feature.properties.id_station).subscribe(
+                (transects: any) => {
+                  this.expandedStations[feature.properties.id_station] = transects;
+                }
+              );
+              return {
+                'Station': feature.properties.name !== "" ? feature.properties.name : "Sans nom",
+                'Taxon': feature.properties.taxon_name,
+                'Nbre visite': feature.properties.nb_visits,
+                'Nbre transect': feature.properties.nb_transect,
+                'Dernière visite': feature.properties.last_visit,
+                'id_station': feature.properties.id_station
+              };
+            });
 
           this.dataSource.data = this.filteredData;
           this.page.totalElements = data[0].totalItems;
@@ -334,13 +343,13 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.dataLoaded = true;
       }
     );
-}
+  }
 
   onViewStation(id_station: number) {
     this.transectLayers.forEach(layer => this._map.removeLayer(layer));
     this.transectLayers = [];
     this.transectLayerMap.clear();
-    this.selectedTransectLayer = null;
+    this.selectedTransectLayer = undefined
 
     const data: Transect[] = this.expandedStations[id_station];
     if (data) {
@@ -394,14 +403,14 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.filterForm.controls['date_low'].statusChanges.subscribe(() => {
-      if (this.filterForm.controls['date_low'].value) {
+      if (this.filterForm?.controls['date_low'].value) {
         this.minDate = this.filterForm.controls['date_low'].value;
         if (!this.filterForm.controls['date_up'].value)
           this.filterForm.controls['date_up'].setValue(this.minDate);
       }
     });
     this.filterForm.controls['date_up'].statusChanges.subscribe(() => {
-      if (this.filterForm.controls['date_up'].value) {
+      if (this.filterForm?.controls['date_up'].value) {
         this.maxDate = this.filterForm.controls['date_up'].value;
         if (!this.filterForm.controls['date_low'].value)
           this.filterForm.controls['date_low'].setValue(this.minDate);
@@ -409,7 +418,7 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  setPage(pageInfo) {
+  setPage(pageInfo: { offset: number }) {
     this.page.pageNumber = pageInfo.offset + 1;
     if (this.storeService.sfsConfig.pagination_serverside) {
       this.onSetParams('page', pageInfo.offset + 1);
@@ -417,7 +426,7 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  onEachFeature(feature, layer) {
+  onEachFeature(feature: { id: any, properties: any }, layer: any) {
     let site = feature.properties;
 
     let marker = L.marker(layer.getLatLng(), {
@@ -431,13 +440,15 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
       })
     });
 
+    // Can't resolve type because mapListService.layerDict is not typed
+    // See geonature/frontend/src/app/GN2CommonModule/map-list/map-list.service.ts
     this.mapListService.layerDict[feature.id] = marker;
 
     marker.bindPopup('<div class="title">' + site.name + '</div>');
     marker.bindTooltip(site.name);
 
     marker.on({
-      click: e => {
+      click: () => {
         this.onMapClick(feature.id);
       }
     });
@@ -451,15 +462,17 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
     if (index === -1) {
       return;
     }
-    const pageSize = this.paginator.pageSize;
-    const pageIndex = Math.floor(index / pageSize);
+    const pageSize = this.paginator ? this.paginator.pageSize : 10;
+    const pageIndex = pageSize ? Math.floor(index / pageSize) : 0;
 
-    this.paginator.pageIndex = pageIndex;
-    this.paginator.page.emit({
-      pageIndex: pageIndex,
-      pageSize: pageSize,
-      length: this.paginator.length
-    });
+    if (this.paginator) {
+      this.paginator.pageIndex = pageIndex;
+      this.paginator.page.emit({
+        pageIndex: pageIndex,
+        pageSize: pageSize,
+        length: this.paginator.length
+      });
+    }
 
     const element = this.filteredData[index];
     this.expandedElement = element;
@@ -468,6 +481,8 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onRowSelect(element: any) {
     const id_station = element.id_station;
+    // Can't resolve type because mapListService.layerDict is not typed
+    // See geonature/frontend/src/app/GN2CommonModule/map-list/map-list.service.ts
     const marker = this.mapListService.layerDict[id_station];
     if (marker) {
       this._map.removeLayer(marker);
@@ -482,10 +497,10 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 500);
   }
 
-  zoomOnSelectedLayer(map, layer, zoom) {
+  zoomOnSelectedLayer(map: any, layer: any, zoom: any) {
     let latlng;
     if (layer instanceof L.Polygon || layer instanceof L.Polyline) {
-      latlng = (layer as any).getCenter();
+      latlng = layer.getCenter();
       map.setView(latlng, zoom);
     } else {
       latlng = layer._latlng;
@@ -512,18 +527,18 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
     initzoomcontrol.addTo(this._map);
   }
 
-  onSetParams(param: string, value) {
+  onSetParams(param: string, value: number | string | boolean) {
     this.storeService.queryString = this.storeService.queryString.set(param, value);
   }
 
   onFilter() {
-    let filter = _.clone(this.filterForm.value);
-    filter.date_low = this.dateParser.format(this.filterForm.value.date_low);
-    filter.date_up = this.dateParser.format(this.filterForm.value.date_up);
-    filter.year = this.filterForm.value.year;
-    filter.area_name = this.filterForm.value.area_name;
-    filter.organism = this.filterForm.value.organism;
-    filter.filterTaxon = this.filterForm.value.filterTaxon;
+    let filter = _.clone(this.filterForm?.value);
+    filter.date_low = this.dateParser.format(this.filterForm?.value.date_low);
+    filter.date_up = this.dateParser.format(this.filterForm?.value.date_up);
+    filter.year = this.filterForm?.value.year;
+    filter.area_name = this.filterForm?.value.area_name;
+    filter.organism = this.filterForm?.value.organism;
+    filter.filterTaxon = this.filterForm?.value.filterTaxon;
     Object.keys(filter).forEach(key => {
       if (filter[key]) {
         this.storeService.queryString = this.storeService.queryString.set(key, filter[key]);
@@ -536,7 +551,7 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   resetFilters() {
-    this.filterForm.reset();
+    this.filterForm?.reset();
     this.storeService.clearQueryString(),
       this.storeService.saveQueryString(),
       this.getStations();
@@ -550,7 +565,7 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate([`${this.config['MFS']['MODULE_URL']}/transects/new_transect`]);
   }
 
-  closeFix(event, datePicker) {
+  closeFix(event: { target: { offsetParent: { nodeName: string } } }, datePicker: any) {
     if (event.target.offsetParent == null) datePicker.close();
     else if (event.target.offsetParent.nodeName != 'NGB-DATEPICKER') datePicker.close();
   }
@@ -578,14 +593,18 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
     if (index === -1) {
       return;
     }
-    const pageSize = this.paginator.pageSize;
-    const pageIndex = Math.floor(index / pageSize);
-    this.paginator.pageIndex = pageIndex;
-    this.paginator.page.emit({
-      pageIndex: pageIndex,
-      pageSize: pageSize,
-      length: this.paginator.length
-    });
+
+    const pageSize = this.paginator ? this.paginator.pageSize : 10;
+    const pageIndex = pageSize ? Math.floor(index / pageSize) : 0;
+
+    if (this.paginator) {
+      this.paginator.pageIndex = pageIndex;
+      this.paginator.page.emit({
+        pageIndex: pageIndex,
+        pageSize: pageSize,
+        length: this.paginator.length
+      });
+    }
 
     const element = this.filteredData[index];
     this.expandedElement = null;
@@ -610,38 +629,38 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onEditStation(station: any, content: any) {
-      this.stationToEdit = station;
-      this._stationApi.getOneStation(station.id_station).subscribe(
-        (data: any) => {
-          this.formEditStation = this.formBuilder.group({
-            name: [data.properties.name, Validators.required],
-            remarks: [data.properties.remarks],
-            cd_nom: [data.properties.cd_nom, Validators.required],
-          });
-          this.taxonCodeControl.setValue({
-            cd_nom: data.properties.cd_nom,
-            nom_complet: data.properties.taxon_name,
-            nom_complet_html: data.properties.taxon_name,
-          });
-          this.modalRef = this.modalService.open(content, { centered: true });
-        }
-      );
+    this.stationToEdit = station;
+    this._stationApi.getOneStation(station.id_station).subscribe(
+      (data: any) => {
+        this.formEditStation = this.formBuilder.group({
+          name: [data.properties.name, Validators.required],
+          remarks: [data.properties.remarks],
+          cd_nom: [data.properties.cd_nom, Validators.required],
+        });
+        this.taxonCodeControl.setValue({
+          cd_nom: data.properties.cd_nom,
+          nom_complet: data.properties.taxon_name,
+          nom_complet_html: data.properties.taxon_name,
+        });
+        this.modalRef = this.modalService.open(content, { centered: true });
+      }
+    );
   }
   addNewTaxonEdit(event: any) {
-    this.formEditStation.patchValue({ cd_nom: event.item.cd_nom });
+    this.formEditStation?.patchValue({ cd_nom: event.item.cd_nom });
   }
 
   onSaveEditStation() {
-    let station = this.formEditStation.value;
+    let station = this.formEditStation?.value;
     station.id_station = this.stationToEdit.id_station;
     this._stationApi.updateStation(station).subscribe(
-      data => {
-        this.modalRef.close();
+      () => {
+        this.modalRef?.close();
         this.getStations(this.getFiltersFromQueryString());
         this.toastr.success('Station modifiée avec succès', '', { positionClass: 'toast-top-right' });
       },
       error => {
-        this.toastr.error('Erreur lors de la modification de la station', '', { positionClass: 'toast-top-right' });
+        this.toastr.error('Erreur lors de la modification de la station', error, { positionClass: 'toast-top-right' });
       }
     );
   }
@@ -659,7 +678,7 @@ export class StationListComponent implements OnInit, AfterViewInit, OnDestroy {
     this._stationApi.deleteStation(this.stationToDelete.id_station).subscribe(
       data => {
         this.getStations(this.getFiltersFromQueryString());
-        this.confirmModalRef.close();
+        this.confirmModalRef?.close();
         this.toastr.success('Station supprimée', '', { positionClass: 'toast-top-right' });
       },
       error => {

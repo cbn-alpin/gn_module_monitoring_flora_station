@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, Input, EventEmitter, OnChanges, OnDestroy } from '@angular/core';
+import { Component, Output, Input, EventEmitter, OnChanges, OnDestroy } from '@angular/core';
 import { FormGroup, FormBuilder, FormArray, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import * as _ from 'lodash';
@@ -8,28 +8,25 @@ import * as _ from 'lodash';
   templateUrl: 'plot-releve.component.html',
   styleUrls: ['./plot-releve.component.scss'],
 })
-export class PlotReleveComponent implements OnInit, OnChanges,OnDestroy {
-  @Input() strata: any[];
-  @Input() substrates: any[];
-  @Input('plot-id') plotId: number;
+export class PlotReleveComponent implements OnChanges, OnDestroy {
+  @Input() strata?: any[];
+  @Input() substrates?: any[];
+  @Input('plot-id') plotId?: number;
   @Input() data: any = null;
-  @Input() disabledForm;
-  @Input() title: string;
+  @Input() disabledForm: any;
+  @Input() title?: string;
   @Input() isSubPlot: boolean = false;
   @Output() plotSurvey = new EventEmitter();
   private isModified: boolean = false;
-  private plotSurveyId: number;
-  plotForm: FormGroup;
-  hasStrataCovering: boolean;
-  hasSubstrateCovering: boolean;
-  private valueChangesSubscription: Subscription;
+  private plotSurveyId?: number;
+  plotForm?: FormGroup;
+  hasStrataCovering?: boolean;
+  hasSubstrateCovering?: boolean;
+  private valueChangesSubscription?: Subscription;
 
   constructor(
     private formBuilder: FormBuilder,
   ) { }
-
-  ngOnInit() {
-  }
 
   ngOnChanges() {
     this.hasStrataCovering = false;
@@ -39,12 +36,12 @@ export class PlotReleveComponent implements OnInit, OnChanges,OnDestroy {
     this.initStrata();
     this.initSubstrates();
 
-    this.plotForm.enable();
+    this.plotForm?.enable();
     if (this.disabledForm) {
-      this.plotForm.disable();
+      this.plotForm?.disable();
     }
 
-    this.plotSurveyId = null;
+    this.plotSurveyId = undefined;
     if (this.data) {
       this.plotSurveyId = this.data.id_plot_survey;
       this.patchForm();
@@ -66,44 +63,44 @@ export class PlotReleveComponent implements OnInit, OnChanges,OnDestroy {
     });
   }
 
- private initStrata(): void {
-    this.strata.sort((a, b) => a.hierarchy.localeCompare(b.hierarchy));
-
-    this.strata.forEach(stratum => {
-      (this.plotForm.get('strata_survey') as FormArray).push(
-        this.formBuilder.group({
-          id_nomenclature_stratum: [stratum.id_nomenclature_stratum],
-          id_plot_survey_stratum: [null],
-          cover_percentage: [null, Validators.compose([Validators.min(0), Validators.max(100)])],
-          label_default: [stratum.label_default],
-          definition_default: [stratum.definition_default],
-        })
-      );
-    });
+  private initStrata(): void {
+    this.strata
+      ?.sort((a, b) => a.hierarchy.localeCompare(b.hierarchy))
+      .forEach(stratum => {
+        (this.plotForm?.get('strata_survey') as FormArray).push(
+          this.formBuilder.group({
+            id_nomenclature_stratum: [stratum.id_nomenclature_stratum],
+            id_plot_survey_stratum: [null],
+            cover_percentage: [null, Validators.compose([Validators.min(0), Validators.max(100)])],
+            label_default: [stratum.label_default],
+            definition_default: [stratum.definition_default],
+          })
+        );
+      });
   }
 
   private initSubstrates(): void {
-    this.substrates.sort((a, b) => a.hierarchy.localeCompare(b.hierarchy));
-
-    this.substrates.forEach(substrate => {
-      (this.plotForm.get('substrates_survey') as FormArray).push(
-        this.formBuilder.group({
-          id_nomenclature_substrate: [substrate.id_nomenclature_substrate],
-          id_plot_survey_substrate: [null],
-          cover_percentage: [null, Validators.compose([Validators.min(0), Validators.max(100)])],
-          label_default: [substrate.label_default],
-          definition_default: [substrate.definition_default],
-        })
-      );
-    });
+    this.substrates
+      ?.sort((a, b) => a.hierarchy.localeCompare(b.hierarchy))
+      .forEach(substrate => {
+        (this.plotForm?.get('substrates_survey') as FormArray).push(
+          this.formBuilder.group({
+            id_nomenclature_substrate: [substrate.id_nomenclature_substrate],
+            id_plot_survey_substrate: [null],
+            cover_percentage: [null, Validators.compose([Validators.min(0), Validators.max(100)])],
+            label_default: [substrate.label_default],
+            definition_default: [substrate.definition_default],
+          })
+        );
+      });
   }
 
  private patchForm() {
     const disturbances = (this.data.disturbances_survey || [])
-      .map(d => d.t_nomenclature || d)
+      .map((d: { t_nomenclature: any }) => d.t_nomenclature || d)
       .filter(Boolean);
 
-    this.plotForm.patchValue({
+    this.plotForm?.patchValue({
       is_exclosure: this.data.is_exclosure,
       taxon_present: this.data.taxon_present,
       remarks: this.data.remarks,
@@ -116,7 +113,7 @@ export class PlotReleveComponent implements OnInit, OnChanges,OnDestroy {
       if (item.cover_percentage != null) {
         this.hasStrataCovering = true;
       }
-      for (const control of this.plotForm.get('strata_survey')['controls']) {
+      for (const control of (this.plotForm?.get('strata_survey') as FormArray)?.controls) {
         if (item.id_nomenclature_stratum == control.value.id_nomenclature_stratum) {
           control.patchValue({
             cover_percentage: item.cover_percentage,
@@ -131,7 +128,7 @@ export class PlotReleveComponent implements OnInit, OnChanges,OnDestroy {
       if (item.cover_percentage != null) {
         this.hasSubstrateCovering = true;
       }
-      for (const control of this.plotForm.get('substrates_survey')['controls']) {
+      for (const control of (this.plotForm?.get('substrates_survey') as FormArray).controls) {
         if (item.id_nomenclature_substrate == control.value.id_nomenclature_substrate) {
           control.patchValue({
             cover_percentage: item.cover_percentage,
@@ -147,7 +144,7 @@ export class PlotReleveComponent implements OnInit, OnChanges,OnDestroy {
     if (this.valueChangesSubscription) {
       this.valueChangesSubscription.unsubscribe();
     }
-    this.valueChangesSubscription = this.plotForm.valueChanges.subscribe(val => {
+    this.valueChangesSubscription = this.plotForm?.valueChanges.subscribe(val => {
       this.isModified = true;
     });
 }
@@ -155,15 +152,15 @@ export class PlotReleveComponent implements OnInit, OnChanges,OnDestroy {
 
 
   onFieldChange() {
-    const formValue = _.cloneDeep(this.plotForm.value);
+    const formValue = _.cloneDeep(this.plotForm?.value);
 
-    formValue.strata_survey = formValue.strata_survey.map(stratum => {
+    formValue.strata_survey = formValue.strata_survey.map((stratum: {label_default:any,definition_default:any}) => {
       delete stratum.label_default;
       delete stratum.definition_default;
       return stratum;
     });
 
-    formValue.substrates_survey = formValue.substrates_survey.map(substrate => {
+    formValue.substrates_survey = formValue.substrates_survey.map((substrate: {label_default:any,definition_default:any}) => {
       delete substrate.label_default;
       delete substrate.definition_default;
       return substrate;
@@ -172,7 +169,7 @@ export class PlotReleveComponent implements OnInit, OnChanges,OnDestroy {
     const payload: any = {
       id_plot: this.plotId,
       ...formValue,
-      status: this.plotForm.valid,
+      status: this.plotForm?.valid,
     };
     if (this.plotSurveyId) {
       payload.id_plot_survey = this.plotSurveyId;

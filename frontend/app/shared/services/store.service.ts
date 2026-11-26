@@ -9,7 +9,7 @@ import * as L from 'leaflet';
 export class StoreService {
   public sfsConfig: any = {};
   public queryString = new HttpParams();
-  public currentSite: ISite;
+  public currentSite?: ISite;
   public urlLoad: string;
 
   constructor(

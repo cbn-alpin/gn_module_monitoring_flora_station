@@ -22,8 +22,8 @@ export class UserService {
   }
    
   getUser() {
-    let currentUser = localStorage.getItem('gn_current_user');
-    return JSON.parse(currentUser);
+    const currentUser = localStorage.getItem('gn_current_user');
+    if (currentUser) return JSON.parse(currentUser);
   }
 
   getCurrentUserRights() {
@@ -41,8 +41,8 @@ export class UserService {
     }
   }
 
- 
-  check_user_cruved_visit(action, visit?): Observable<any> {
+
+  check_user_cruved_visit(action: any, visit?: any):Observable<any> {
     let isAllowed = false;
     return new Observable(observer => {
       this.getUserCruved().subscribe(
@@ -51,8 +51,8 @@ export class UserService {
           let user_cruved_level = ucruved[action];
           if (visit) {
             if (user_cruved_level == '1') {
-              visit.observers.forEach(role => {
-                if (role.id_role == this.currentUser.id_role) {
+              visit.observers.forEach(observer => {
+                if (observer.id_role == this.currentUser.id_role) {
                   isAllowed = true;
                 } else if (visit.id_digitiser == this.currentUser.id_role) {
                   isAllowed = true;
@@ -61,8 +61,8 @@ export class UserService {
             }
 
             if (user_cruved_level == '2') {
-              visit.observers.forEach(role => {
-                if (role.id_role == this.currentUser.id_role) {
+              visit.observers.forEach(observer => {
+                if (observer.id_role == this.currentUser.id_role) {
                   isAllowed = true;
                 } else if (visit.id_digitiser == this.currentUser.id_role) {
                   isAllowed = true;
@@ -80,14 +80,14 @@ export class UserService {
           observer.next(isAllowed);
         },
         error => {
-          observer.error('error');
-          console.log('Error userCruved: ', error);
+          observer.error(error);
+          console.error('Error userCruved: ', error);
         }
       );
     });
   }
 
-  check_isAdmin(action): Observable<any> {
+  check_isAdmin(action: any): Observable<any> {
     let isAllowed = false;
     return new Observable(observer => {
       this.getUserCruved().subscribe(
@@ -98,14 +98,14 @@ export class UserService {
           observer.next(isAllowed);
         },
         error => {
-          observer.error('error');
-          console.log('error userCruved: ', error);
+          observer.error(error);
+          console.error('Error userCruved: ', error);
         }
       );
     });
   }
 
-  check_user_cruved(action): Observable<any> {
+  check_user_cruved(action: any): Observable<any> {
     let isAllowed = false;
     return new Observable(observer => {
       this.getUserCruved().subscribe(
@@ -118,7 +118,8 @@ export class UserService {
           observer.next(isAllowed);
         },
         error => {
-          observer.error('error');
+          observer.error(error);
+          console.error('Error userCruved: ', error);
         }
       );
     });
